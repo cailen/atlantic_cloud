@@ -1,0 +1,73 @@
+---
+- hosts: localhost
+  vars: 
+    - cu_id: 77555
+  tasks:
+    - name: Atlantic_Net Cloud - Create new server
+      atlantic_cloud:
+         state: present
+         public_key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+         private_key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+         servername: "{{cu_id}}-HOST01"
+         vm_location: USEAST1
+         imageid: ubuntu-14.04_64bit
+         planname: "G2.2GB"
+         ssh_key: "ansible"
+      register: host_server1
+
+    - name: Atlantic_Net Cloud - Create new server
+      atlantic_cloud:
+         state: present
+         public_key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+         private_key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+         servername: "{{cu_id}}-HOST02"
+         vm_location: USEAST1
+         imageid: ubuntu-14.04_64bit
+         planname: "G2.2GB"
+         ssh_key: "ansible"
+      register: host_server2
+
+    - name: Atlantic_Net Cloud - Create new server
+      atlantic_cloud:
+         state: present
+         public_key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+         private_key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+         servername: "{{cu_id}}-HOST03"
+         vm_location: USEAST1
+         imageid: ubuntu-14.04_64bit
+         planname: "G2.2GB"
+         ssh_key: "ansible"
+      register: host_server3
+
+    - name: Adding the new hosts to the host file
+      add_host:
+        name: "{{ item.name.results.ip_address }}"
+        groups: "{{ item.groups }}"
+      with_items:
+        - { name: "{{ids_server}}", groups: 'snorby'}
+        - { name: "{{firewall_server}}", groups: 'firewall'}
+        - { name: "{{host_server1}}", groups: 'webserver'}
+
+    - name: Sending info to file
+      template: src=templates/new_cloudservers.j2 dest=/etc/ansible/new_server_{{ids_server.results.cu_id}} owner=root group=root mode=644
+   
+    - name: Waiting for servers to come online...
+      hosts: all
+      local_action:
+        module: wait_for
+          host={{ inventory_hostname }}
+          port=22
+          delay=1
+          timeout=300
+
+    - name: Update the systems
+      apt:
+        upgrade: dist
+        update_cache: yes
+
+    - name: Installs Snorby
+      hosts: snorby
+      become: true
+      vars:
+    - passenger_webserver: apache2
+    - snort_barnyard2_enable: false
