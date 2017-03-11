@@ -56,7 +56,6 @@ options:
   enablebackup:
     description:
      - Optional, Boolean, enables backups for your cloudserver.
-    version_added: "1.6"
     default: "no"
     choices: [ "yes", "no" ]
   wait:
@@ -71,35 +70,17 @@ options:
   ssh_key:
     description:
      - The name of the public SSH key you want to add to your account.
+  reboottype:
+    description:
+     - The type of reboot: soft or hard. (Suggestion is to hard reboot)
 
-notes:
-  - none  
-requirements:
-  - "python >= 2.6"
-  - anetpy
-'''
-
-
-EXAMPLES = '''
-# Ensure a SSH key is present
-# If a key matches this name, will return the ssh key id and changed = False
-# If no existing key matches this name, a new key is created, the ssh key id is returned and changed = False
-
-- atlantic_cloud:
-    state: present
-    command: ssh
-    name: my_ssh_key
-    key_id: 'ssh-rsa AAAA...'
-    public_key: XXX
-    private_key: XXX
+EXAMPLES
 
 # Create a new cloudserver
 # Will return the cloudserver details including the cloudserver id (used for idempotence)
-
 - atlantic_cloud:
     state: present
-    command: cloudserver
-    name: mycloudserver
+    servername: mycloudserver
     public_key: XXX
     private_key: XXX
     planname: G2.2GB
@@ -108,35 +89,27 @@ EXAMPLES = '''
     wait_timeout: 500
   register: my_cloudserver
 
-- debug:
-    msg: "ID is {{ my_cloudserver.cloudserver.id }}"
-
-- debug:
-    msg: "IP is {{ my_cloudserver.cloudserver.ip_address }}"
+- name: Server ID
+  debug:
+    msg: "ID is {{ my_cloudserver.results.instanceid }}"
+- name: Server IP
+  debug:
+    msg: "IP is {{ my_cloudserver.results.vm_ip_address }}"
 
 # Ensure a cloudserver is present
 # If cloudserver id already exist, will return the cloudserver details and changed = False
-# If no cloudserver matches the id, a new cloudserver will be created and the cloudserver details (including the new id) are returned, changed = True.
-
 - atlantic_cloud:
     state: present
-    command: cloudserver
-    instanceid: 123
-    servername: mycloudserver
+    instanceid: 123456
     public_key: XXX
     private_key: XXX
-    planname: G2.2GB
-    vm_location: USEAST2
-    imageid: ubuntu-14.04_64bit
     wait_timeout: 500
-
 # Create a cloudserver with ssh key
-# The ssh key id can be passed as argument at the creation of a cloudserver (see key_id).
+# The ssh key id can be passed as argument at the creation of a cloudserver (see ssh_key).
 # The key is used to connect as root to the cloudserver.
-
 - atlantic_cloud:
     state: present
-    key_id: XXX
+    ssh_key: XXX
     servername: mycloudserver
     public_key: XXX
     private_key: XXX
@@ -312,8 +285,9 @@ def core(module):
                     results = cloudserver.reboot(instanceid=module.params['instanceid'], reboottype=module.params['reboottype'])
                     msg = "Server has been rebooted"
                     changed =  True
-                changed = False
-                msg = "Server details"
+                else:
+                    changed = False
+                    msg = "Server details"
                                         
         # Create a new server if you've made it this far
         if module.params['servername'] and not module.params['instanceid']:
