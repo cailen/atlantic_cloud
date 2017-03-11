@@ -3,3 +3,7 @@
 ################################################################################
 
 /.vs/ProjectSettings.json
+/.vs
+/.vs/slnx.sqlite
+*.sqlite
+/.vs/slnx.sqlite
