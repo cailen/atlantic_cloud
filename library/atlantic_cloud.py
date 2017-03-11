@@ -53,6 +53,8 @@ options:
   vm_location:
     description:
      - This is the slug of the region you would like your server to be created in.
+    default: 'USEAST1'
+    choices: ['USEAST1', 'USEAST2', 'USCENTRAL1', 'USWEST1', 'CAEAST1', 'EUWEST1']
   enablebackup:
     description:
      - Optional, Boolean, enables backups for your cloudserver.
@@ -64,8 +66,7 @@ options:
     default: "yes"
     choices: [ "yes", "no" ]
   wait_timeout:
-    description:
-     - How long before wait gives up, in seconds.
+    description:     - How long before wait gives up, in seconds.
     default: 300
   ssh_key:
     description:
@@ -73,6 +74,8 @@ options:
   reboottype:
     description:
      - The type of reboot: soft or hard. (Suggestion is to hard reboot)
+    default: "hard"
+    choices: [ "hard", "soft"]
 
 EXAMPLES
 
@@ -334,14 +337,14 @@ def main():
             servername = dict(type='str'),
             planname = dict(type='str'),
             imageid = dict(type='str'),
-            vm_location = dict(type='str'),
+            vm_location = dict(type='str', choices=['USEAST1', 'USEAST2', 'USCENTRAL1', 'USWEST1', 'CAEAST1', 'EUWEST1'], default='USEAST1'),
             enablebackup = dict(type='bool', default='no'),
             instanceid = dict(type='int'),
             wait = dict(type='bool', default=True),
             wait_timeout = dict(default=300, type='int'),
             ssh_key = dict(type='str'),
             server_qty = dict(type='int', default=1),
-            reboottype = dict(type='str',)
+            reboottype = dict(type='str', choices=['hard', 'soft'], default='hard')
         ),
         required_together = [
             ['planname', 'imageid', 'vm_location', 'servername'],
