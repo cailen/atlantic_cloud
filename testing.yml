@@ -90,7 +90,7 @@
 
 - hosts: derek-host
   vars:
-  pretasks:
+  pre-tasks:
     - name: Install aptitude (Debian and Ubuntu)
       apt:
         name: aptitude
