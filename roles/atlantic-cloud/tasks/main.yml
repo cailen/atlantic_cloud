@@ -1,7 +1,7 @@
 ---
 - debug:
-    msg: "{{item}}"
-  with_nested: 
+    msg: "{{item.1}} and {{item.0}}"
+  with_subelements: 
     - "{{builds}}"
     - details
 
