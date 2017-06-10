@@ -15,14 +15,14 @@
     - private_key: 66f002a2b6c5d742a9ce6d6e4de333534c73b128
     - ssh_key: "ansible"
     - builds:
-        host:
-          - imageid: ubuntu-16.04_64bit
-          - planname: "G2.2GB"  
-          - servername: "{{cu_id}}-{{datacenters[datacenter]}}-ubuntu"
-        ids:
-          - imageid: CentOS-7.3_64bit
-          - planname: "G2.2GB"
-          - servername: "{{cu_id}}-{{datacenters[datacenter]}}-centos"
+        - host:
+            imageid: ubuntu-16.04_64bit
+            planname: "G2.2GB"  
+            servername: "{{cu_id}}-{{datacenters[datacenter]}}-ubuntu"
+        - ids:
+            imageid: CentOS-7.3_64bit
+            planname: "G2.2GB"
+            servername: "{{cu_id}}-{{datacenters[datacenter]}}-centos"
 
   roles:
     - atlantic-cloud
