@@ -1,9 +1,8 @@
 ---
 - debug:
     msg: "{{item}}"
-  with_subelements: 
+  with_nested: 
     - builds
-    - details
 
 - name: "Atlantic_Net Cloud - Creating {{ item.servername }}"
   atlantic_cloud:
