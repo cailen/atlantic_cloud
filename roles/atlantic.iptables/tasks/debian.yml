@@ -1,0 +1,33 @@
+---
+- name: Install netfilter-persistent service (Debian)
+  apt:
+    name: netfilter-persistent
+    state: latest
+- name: Stop netfilter-persistent
+  systemd:
+    name: netfilter-persistent
+    state: stopped
+- name: Rename netfilter-persistent.service to iptables.service (Debian)
+  command: mv /lib/systemd/system/netfilter-persistent.service /lib/systemd/system/iptables.service
+  ignore_errors: yes
+- name: Make /etc/iptables directory (Debian)
+  file:
+    path: /etc/iptables
+    state: directory
+- name: Copy IPv4 plugin for netfilter (Debian)
+  copy:
+    src: templates/15-ip4tables
+    dest: /usr/share/netfilter-persistent/plugins.d/15-ip4tables
+    mode: a+x
+- name: Copy iptables template (Debian)
+  template:
+    src: templates/iptables.j2
+    dest: /etc/iptables/rules.v4
+- name: Restore from /etc/iptables (Debian)
+  raw: iptables-restore < /etc/iptables/rules.v4
+- name: Reload systemd daemon (Debian)
+  systemd:
+    daemon_reload: yes
+    name: iptables
+    enabled: yes
+    state: started
