@@ -9,8 +9,8 @@
       imageid: "{{ item.imageid }}"
       planname: "{{ item.planname }}"
       ssh_key: "{{ ssh_key }}"
-  with_subelements:
-    - builds
+  with_items: "{{ builds }}"
+
   register: cloudserver
 
 - name: Adding the new host to the dynamic host file
