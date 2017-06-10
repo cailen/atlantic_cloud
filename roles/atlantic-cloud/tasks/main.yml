@@ -4,12 +4,12 @@
       state: present
       public_key: "{{ public_key }}"
       private_key: "{{ private_key }}"
-      servername: "{{ servername }}"
+      servername: "{{ item.servername }}"
       vm_location: "{{ datacenter }}"
       imageid: "{{ item.imageid }}"
       planname: "{{ item.planname }}"
       ssh_key: "{{ ssh_key }}"
-  with_items:
+  with_subelements:
     - builds
   register: cloudserver
 
