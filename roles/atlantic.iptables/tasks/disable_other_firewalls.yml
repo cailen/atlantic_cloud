@@ -31,7 +31,7 @@
     enabled: no
   when: ansible_distribution == "Ubuntu" and ufw_installed.rc == 0
 
-  - name: Check if ufw package is installed (on Debian).
+- name: Check if ufw package is installed (on Debian).
   shell: service ufw status
   args:
     warn: no
