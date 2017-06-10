@@ -2,13 +2,15 @@
 - name: "Atlantic_Net Cloud - Creating {{ servername }}"
   atlantic_cloud:
       state: present
-      public_key: "{{ publickey }}"
-      private_key: "{{ privatekey }}"
+      public_key: "{{ public_key }}"
+      private_key: "{{ private_key }}"
       servername: "{{ servername }}"
       vm_location: "{{ datacenter }}"
-      imageid: "{{ os }}"
-      planname: "{{ plan }}"
-      ssh_key: "{{ sshkey }}"
+      imageid: "{{ item.imageid }}"
+      planname: "{{ item.planname }}"
+      ssh_key: "{{ ssh_key }}"
+  with_items:
+    - builds
   register: cloudserver
 
 - name: Adding the new host to the dynamic host file
@@ -28,7 +30,7 @@
   add_host:
     name: "{{ cloudserver.results.ip_address }}"
     ansible_python_interpreter: /usr/local/bin/python2.7
-    ansible_ssh_pass = "Nrprocks!"
+    ansible_ssh_pass: "Nrprocks!"
     groups: "cloud_{{build_type}}"
   when: build_type == "firewall"
 
