@@ -9,7 +9,7 @@
         USWEST1: sfo
         CAEAST1: tor
         EUWEST1: lon
-    - datacenter: EUWEST1
+    - datacenter: USEAST1
     - firewall: yes
     - public_key: ATL8f59337f60fb45e4ff600c38e62ab540
     - private_key: 66f002a2b6c5d742a9ce6d6e4de333534c73b128
