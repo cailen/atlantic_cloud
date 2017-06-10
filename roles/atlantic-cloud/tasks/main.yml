@@ -1,4 +1,7 @@
 ---
+- debug:
+  msg: "{{builds}}"
+
 - name: "Atlantic_Net Cloud - Creating {{ item.servername }}"
   atlantic_cloud:
       state: present
