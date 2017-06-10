@@ -4,7 +4,7 @@
   with_items: 
     - "{{builds}}"
 
-- name: "Atlantic_Net Cloud - Creating {{ item.servername }}"
+- name: "Atlantic_Net Cloud - Creating servers"
   atlantic_cloud:
       state: present
       public_key: "{{ public_key }}"
@@ -17,6 +17,8 @@
   with_items: "{{ builds }}"
   register: cloudserver
 
+- debug:
+  msg: "{{cloudserver}}"
 # - name: Adding the new host to the dynamic host file
 #   add_host:
 #     name: "{{ cloudserver.results.ip_address }}"
