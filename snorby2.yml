@@ -1,0 +1,15 @@
+---
+- name: Installs Snorby
+  hosts: snorby
+  become: true
+  vars:
+    - passenger_webserver: apache2
+    - snort_barnyard2_enable: false
+  roles:
+    - role: ansible-ntp
+    - role: ansible-apache2
+      when: passenger_webserver == "apache2"
+    - role: altermn.rvm
+    - role: ansible-passenger
+    - role: ansible-mysql
+    #- role: ansible-snorby

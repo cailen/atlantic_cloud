@@ -1,0 +1,137 @@
+---
+- hosts: client133898-fw
+  gather_facts: no
+  vars:
+    device_id: 21666-2275
+    hostname: 21666-2275
+    wan_ip: 45.58.45.143
+    wan_cidr: 24
+    gateway: 45.58.45.1
+    lan_ip: 10.112.50.1
+    lan_range: 10.112.50.0/25
+    lan_cidr: 25
+    vpn_range: 10.112.50.128/25
+    ids: yes
+    ids_ip: 10.112.50.2
+    wan_interface: vtnet0
+    lan_interface: vtnet1
+  vars_prompt:
+    - name: "adminpassword"
+      prompt: "Administrator password please"
+      private: yes
+      encrypt: "bcrypt"
+      confirm: yes
+  tasks:
+    - name: Add Ansible control IP to the rules
+      raw: easyrule pass wan tcp 104.245.39.134 {{ wan_ip }} 22
+    - name: Fetch the latest version
+      raw: fetch https://updates.pfsense.org/_updaters/amd64/latest.tgz
+    - name: Upgrade pfSense
+      raw: /etc/rc.firmware pfSenseupgrade /root/latest.tgz
+    - name: Wait for reboot
+      wait_for:
+        host: "{{ ansible_host|default(ansible_ssh_host|default(inventory_hostname)) }}"
+        port: 22
+        delay: 60
+        connection: local
+#    need to have some kind of wait here so pfctl can be disabled again. or something added beforehand
+    - name: Install packages
+      pkgng:
+        name: net-snmp,xmlstarlet,sudo,nano,rsync,php56-openssl
+        state: present
+    - name: Copy snmpd.conf over
+      template:
+        src: templates/snmpd.conf.j2
+        dest: /usr/local/share/snmp/snmpd.conf
+    - name: Copy config.xml over (cross fingers)
+      template:
+        src: templates/config.xml.j2
+        dest: /cf/conf/config.xml
+    - name: Remove config temp file
+      raw: rm -f /tmp/config.cache && /etc/rc.reload_all start
+
+
+
+- hosts: client133898-host
+  vars:
+    device_id: 21666-2277
+  tasks:
+    - name: Install aptitude
+      apt:
+        name: aptitude
+        state: latest
+    - name: Update VMs
+      apt:
+        update_cache: yes
+        upgrade: yes
+        state: latest
+    - name: Install iptables service (netfilter-persistent)
+      apt:
+        name: netfilter-persistent
+        state: latest
+    - name: Stop netfilter-persistent
+      systemd:
+        name: netfilter-persistent
+        state: stopped
+    - name: Rename netfilter-persistent.service to iptables.service
+      command: mv /lib/systemd/system/netfilter-persistent.service /lib/systemd/system/iptables.service
+      ignore_errors: yes
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+        name: iptables
+        enabled: yes
+        state: started
+    - name: Make /etc/iptables directory
+      file:
+        path: /etc/iptables
+        state: directory
+    - name: Copy IPv4 plugin for netfilter
+      copy:
+        src: templates/15-ip4tables
+        dest: /usr/share/netfilter-persistent/plugins.d/15-ip4tables
+        mode: a+x
+    - name: Copy iptables template
+      copy:
+        src: templates/iptables
+        dest: /etc/iptables/rules.v4
+    - name: Restore from /etc/iptables
+      raw: iptables-restore < /etc/iptables/rules.v4
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+        name: iptables
+        enabled: yes
+        state: started
+    - name: Install snmpd
+      apt:
+        name: snmpd
+        state: latest
+    - name: Copy default snmpd.conf
+      copy:
+        src: templates/snmpd.conf
+        dest: /etc/snmp/snmpd.conf
+        force: yes
+    - name: Enable and restart snmpd
+      systemd:
+        name: snmpd
+        enabled: yes
+        state: restarted
+    - name: Add r1soft repo
+      raw: echo deb http://repo.r1soft.com/apt stable main >> /etc/apt/sources.list
+    - name: Get r1soft key
+      raw: wget http://repo.r1soft.com/r1soft.asc
+    - name: Add r1soft key
+      raw: apt-key add /root/r1soft.asc
+    - name: Install r1soft agent
+      apt:
+        name: r1soft-cdp-enterprise-agent
+        update_cache: yes
+        state: latest
+#    - name: Get the r1soft key from server
+#      raw: r1soft-setup --get-key https://cdp.dal-tx.atlantic.net
+    - name: Enable and restart cdp-agent
+      systemd:
+        name: cdp-agent
+        enabled: yes
+        state: restarted    

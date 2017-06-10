@@ -1,0 +1,67 @@
+---
+- hosts: localhost
+  vars: 
+    - cu_id: 77555
+    - public_key: ATL8f59337f60fb45e4ff600c38e62ab540
+    - private_key: 66f002a2b6c5d742a9ce6d6e4de333534c73b128
+
+  tasks:
+
+    - name: Atlantic_Net Cloud - Create new server
+      atlantic_cloud:
+         state: present
+         servername: "{{cu_id}}-test-server"
+         vm_location: USEAST1
+         imageid: CentOS-7.3_64bit
+         planname: "G2.4GB"
+         ssh_key: "ansible"
+      register: my_cloudserver
+
+    - name: Wait for the server to come online...
+      local_action:
+        module: wait_for
+          host={{ my_cloudserver.results.ip_address }}
+          port=22
+          delay=1
+          timeout=300
+
+    - name: Atlantic_Net Cloud - Get server details from the server just created
+      atlantic_cloud:
+         state: present
+         instanceid: "{{my_cloudserver.results.instanceid}}"
+
+    - name: Server ID
+      debug:
+         msg: "ID is {{ my_cloudserver.results.instanceid }}"
+    - name: Server IP
+      debug:
+         msg: "IP is {{ my_cloudserver.results.vm_ip_address }}"
+#    - name: Atlantic
+
+    - name: Atlantic_Net Cloud - Reboot server
+      atlantic_cloud:
+         state: present
+         instanceid: "{{my_cloudserver.results.instanceid}}"
+         reboottype: "hard"
+      register: result
+    - name: Server reboot message
+      debug:
+         var: result
+
+    - name: Wait for the server to come online...
+      local_action:
+        module: wait_for
+          host={{ my_cloudserver.results.ip_address }}
+          port=22
+          delay=1
+          timeout=300
+
+    - name: Atlantic_Net Cloud - Delete the server
+      atlantic_cloud:
+         state: absent
+         instanceid: "{{my_cloudserver.results.instanceid}}"
+      register: result
+    - name: Server deleted message
+      debug:
+         var: result
+         

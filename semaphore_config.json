@@ -1,0 +1,13 @@
+{
+ 	"mysql": {
+ 		"host": "127.0.0.1:3306",
+ 		"user": "root",
+ 		"pass": "dR8xa-262038g2",
+ 		"name": "semaphore"
+ 	},
+ 	"port": "tower.derekdesignsorlando.com:1984",
+ 	"bugsnag_key": "",
+ 	"tmp_path": "/etc/ansible",
+ 	"cookie_hash": "cpJ3eufKnXkACZt0b8rJZ3jjIL4jYOOIDo+OP/4e/yw=",
+ 	"cookie_encryption": "+O2+IcrS/y7PHEDqS5HtIqqV3Tvsi924pKUB6AgWbPI="
+ }

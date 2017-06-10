@@ -1,0 +1,6 @@
+[elasticsearch-5.x]
+name=Elasticsearch repository for 5.x packages
+baseurl=http://artifacts.elastic.co/elasticsearch/5.x/yum
+gpgcheck=1
+gpgkey=http://artifacts.elastic.co/GPG-KEY-elasticsearch
+enabled=1

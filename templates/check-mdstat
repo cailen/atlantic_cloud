@@ -1,0 +1,117 @@
+#!/usr/bin/perl -w
+#
+# check-mdstat
+# John Simpson <jms1@atlantic.net> 2009-09-08
+#
+# reads /proc/mdstat, provides output suitable for use by an "exec" line
+# in /etc/snmp/snmpd.conf.
+
+require 5.003 ;
+use strict ;
+
+my @status = qw ( GOOD BAD InternalProblem ) ;
+
+########################################
+# read /proc/mdstat into memory
+
+my $broken = 0 ;
+
+if ( open ( I , "</proc/mdstat" ) )
+{
+	while ( my $line = <I> )
+	{
+		print $line ;
+
+		if ( $line =~ /\[.*_.*\]/ )
+		{
+			$broken = 1 ;
+		}
+	}
+
+	close I ;
+}
+else
+{
+	print "Unable to read /proc/mdstat: $!\n" ;
+	$broken = 2 ;
+}
+
+########################################
+# make our report to the outside world
+
+print "Result: $status[$broken]\n" ;
+exit $broken ;#!/usr/bin/perl -w
+#
+# check-mdstat
+# John Simpson <jms1@atlantic.net> 2009-09-08
+#
+# reads /proc/mdstat, provides output suitable for use by an "exec" line
+# in /etc/snmp/snmpd.conf.
+
+require 5.003 ;
+use strict ;
+
+my @status = qw ( GOOD BAD InternalProblem ) ;
+
+########################################
+# read /proc/mdstat into memory
+
+my $broken = 0 ;
+
+if ( open ( I , "</proc/mdstat" ) )
+{
+	while ( my $line = <I> )
+	{
+		print $line ;
+
+		if ( $line =~ /\[.*_.*\]/ )
+		{
+			$broken = 1 ;
+		}
+	}
+
+	close I ;
+}
+else
+{
+	print "Unable to read /proc/mdstat: $!\n" ;
+	$broken = 2 ;
+}
+
+########################################
+# make our report to the outside world
+
+print "Result: $status[$broken]\n" ;
+exit $broken ;
+
+check-smart
+==============
+#!/bin/sh
+
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+WORK=`mktemp /tmp/smart.XXXXXXXX`
+
+fail=0
+
+for disk in `grep -e ' [hs]d[a-z]$' /proc/partitions | awk '{print $4}'`
+do
+	dev="/dev/$disk"
+
+	rm -f $WORK
+	smartctl -H $dev 2>&1 > $WORK
+	rv=$(($? & 24))
+
+	printf "%s: " $dev
+	if ! grep result $WORK
+	then
+		cat $WORK
+	fi
+
+	if [ $rv -gt 0 ]
+	then
+		fail=1
+	fi
+done
+
+rm $WORK
+exit $fail

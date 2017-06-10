@@ -1,0 +1,37 @@
+---
+- include: ./receive_key.yml
+
+- name: downloading RVM installer
+  get_url:
+    url: "{{rvm.url}}"
+    dest: "{{rvm.temp_installer_path}}"
+
+- name: set executable RVM installer
+  file:
+    path: "{{rvm.temp_installer_path}}"
+    mode: 0755
+
+- name: installing RVM as root
+  command: "{{rvm.temp_installer_path}} --path {{rvm_root}} stable"
+  sudo: true
+  when: "'{{ rvm_install_type }}' == 'system'"
+
+- name: installing RVM as user
+  command: "{{rvm.temp_installer_path}} --path {{rvm_root}} stable"
+  sudo: false
+  when: "'{{ rvm_install_type }}' == 'user'"
+
+- name: removing RVM installer
+  file:
+    path: "{{rvm.temp_installer_path}}"
+    state: absent
+
+- name: setting RVM autolibs on as root
+  command: "{{rvm_root}}/bin/rvm autolibs 3"
+  sudo: true
+  when: "'{{ rvm_install_type }}' == 'system'"
+
+- name: setting RVM autolibs on as user
+  command: "{{rvm_root}}/bin/rvm autolibs 3"
+  sudo: false
+  when: "'{{ rvm_install_type }}' == 'user'"

@@ -1,0 +1,13 @@
+---
+- include: tasks/download-remote.yml
+  static: false
+  when: not percona_repo_download_local
+
+- include: tasks/download-local.yml
+  static: false
+  when: percona_repo_download_local
+
+- name: Update APT cache
+  apt:
+    update_cache: yes
+  when: percona_repo_added | changed

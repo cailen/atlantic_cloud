@@ -1,0 +1,30 @@
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+:ATLANTIC-NET-MGMT - [0:0]
+:PUBLIC - [0:0]
+:TRUSTED - [0:0]
+
+# Filter all INPUT traffic through custom chains:
+-A INPUT -j ATLANTIC-NET-MGMT
+-A INPUT -j PUBLIC
+
+# Allow traffic from loopback interface:
+-A INPUT -i lo -j ACCEPT
+
+# Allow already established traffic
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+####################
+# Custom Rule Chains
+####################
+# Allow traffic from Atlantic.Net Management Ranges:
+-A ATLANTIC-NET-MGMT -s 209.208.0.192/26 -j ACCEPT
+-A ATLANTIC-NET-MGMT -s 209.208.50.9 -j ACCEPT
+-A ATLANTIC-NET-MGMT -s 209.208.50.11 -p udp -m udp --dport 161 -j ACCEPT
+-A ATLANTIC-NET-MGMT -s 209.208.116.206 -j ACCEPT
+
+-A PUBLIC -s 50.88.129.94 -j ACCEPT
+-A PUBLIC -s 104.245.39.134 -j ACCEPT
+COMMIT
