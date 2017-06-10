@@ -1,6 +1,6 @@
 ---
 - debug:
-  msg: "{{item}}"
+    msg: "{{item}}"
   with_items: "{{builds}}"
 
 - name: "Atlantic_Net Cloud - Creating {{ item.servername }}"
