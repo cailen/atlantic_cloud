@@ -69,7 +69,7 @@
     device_id: 21666-2277
   roles:
     - atlantic.iptables
-    - atlantic.netsnmp
+    - atlantic.snmp
 
     # - name: Install aptitude
     #   apt:
