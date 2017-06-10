@@ -9,9 +9,9 @@
          public_key: ATL8f59337f60fb45e4ff600c38e62ab540
          private_key: 66f002a2b6c5d742a9ce6d6e4de333534c73b128
          servername: "test-nyc-ubuntu"
-         vm_location: USEAST1
+         vm_location: USEAST2
          imageid: ubuntu-16.04_64bit
-         planname: "G2.4GB"
+         planname: "G2.2GB"
          ssh_key: "ansible"
       register: derek_host
 
@@ -24,7 +24,7 @@
         - { name: "{{derek_host}}", groups: 'derek-host'}
 
     - name: Sending info to file
-      template: src=templates/new_derek_host.j2 dest=/etc/ansible/new_server_{{derek_host.results.cu_id}} owner=root group=root mode=644
+      template: src=templates/new_derek_host.j2 dest=/etc/ansible/new_derekserver_{{derek_host.results.cu_id}}_{{derek_host.results.instanceid}} owner=root group=root mode=644
 
     - name: Waiting for servers to come online...
       local_action:
@@ -34,84 +34,72 @@
           delay=20
           timeout=300
 
+    - name: Atlantic_Net Cloud - Create new server
+      atlantic_cloud:
+         state: present
+         public_key: ATL8f59337f60fb45e4ff600c38e62ab540
+         private_key: 66f002a2b6c5d742a9ce6d6e4de333534c73b128
+         servername: "test-nyc-centos"
+         vm_location: USEAST2
+         imageid: CentOS-7.3_64bit
+         planname: "G2.2GB"
+         ssh_key: "ansible"
+      register: derek_host2
+
+    - name: Adding the new hosts to the host file
+      add_host:
+        name: "{{ item.name.results.ip_address }}"
+        groups: "{{ item.groups }}"
+      with_items:
+        - { name: "{{derek_host2}}", groups: 'derek-host'}
+
+    - name: Sending info to file
+      template: src=templates/new_derek_host.j2 dest=/etc/ansible/new_derekserver_{{derek_host2.results.cu_id}}_{{derek_host2.results.instanceid}} owner=root group=root mode=644
+
+    - name: Waiting for servers to come online...
+      local_action:
+        module: wait_for
+          host={{ derek_host2.results.ip_address }}
+          port=22
+          delay=20
+          timeout=300
+
 - hosts: derek-host
   vars:
     device_id: 21666-2277
-  tasks:
-    - name: Install aptitude
-      apt:
-        name: aptitude
-        state: latest
+  roles:
+    - atlantic.iptables
+    - atlantic.netsnmp
+
+    # - name: Install aptitude
+    #   apt:
+    #     name: aptitude
+    #     state: latest
 #    - name: Update VMs
 #      apt:
 #        update_cache: yes
 #        upgrade: yes
 #        state: latest
-    - name: IPTABLES || Install iptables service (netfilter-persistent)
-      apt:
-        name: netfilter-persistent
-        state: latest
-    - name: Stop netfilter-persistent
-      systemd:
-        name: netfilter-persistent
-        state: stopped
-    - name: IPTABLES || Rename netfilter-persistent.service to iptables.service
-      command: mv /lib/systemd/system/netfilter-persistent.service /lib/systemd/system/iptables.service
-      ignore_errors: yes
-    - name: IPTABLES || Make /etc/iptables directory
-      file:
-        path: /etc/iptables
-        state: directory
-    - name: IPTABLES || Copy IPv4 plugin for netfilter
-      copy:
-        src: templates/15-ip4tables
-        dest: /usr/share/netfilter-persistent/plugins.d/15-ip4tables
-        mode: a+x
-    - name: IPTABLES || Copy iptables template
-      copy:
-        src: templates/iptables
-        dest: /etc/iptables/rules.v4
-    - name: IPTABLES || Restore from /etc/iptables
-      raw: iptables-restore < /etc/iptables/rules.v4
-    - name: IPTABLES || Reload systemd daemon
-      systemd:
-        daemon_reload: yes
-        name: iptables
-        enabled: yes
-        state: started
-    - name: SNMPD || Install snmpd
-      apt:
-        name: snmpd
-        state: latest
-    - name: SNMPD || Copy default snmpd.conf
-      copy:
-        src: templates/snmpd.conf
-        dest: /etc/snmp/snmpd.conf
-        force: yes
-    - name: SNMPD || Enable and restart snmpd
-      systemd:
-        name: snmpd
-        enabled: yes
-        state: restarted
-    - name: R1SOFT || Add r1soft repo
-      raw: echo deb http://repo.r1soft.com/apt stable main >> /etc/apt/sources.list
-    - name: R1SOFT || Get r1soft key
-      raw: wget http://repo.r1soft.com/r1soft.asc
-    - name: R1SOFT || Add r1soft key
-      raw: apt-key add /root/r1soft.asc
-    - name: R1SOFT || Install r1soft agent
-      apt:
-        name: r1soft-cdp-enterprise-agent
-        update_cache: yes
-        state: latest
-#    - name: Get the r1soft key from server
-#      raw: r1soft-setup --get-key https://cdp.dal-tx.atlantic.net
-    - name: R1SOFT || Enable and restart cdp-agent
-      systemd:
-        name: cdp-agent
-        enabled: yes
-        state: restarted    
-    - name: TRENDMICRO || Install TrendMicro (part 1)
-      command: wget https://209.208.116.206:4119/software/agent/Ubuntu_16.04/x86_64/ -O /tmp/agent.deb --no-check-certificate --quiet
-    - name: TRENDMICRO || Install TrendMicro (part 2)
-      command: dpkg -i /tmp/agent.deb
+
+#     - name: R1SOFT || Add r1soft repo
+#       raw: echo deb http://repo.r1soft.com/apt stable main >> /etc/apt/sources.list
+#     - name: R1SOFT || Get r1soft key
+#       raw: wget http://repo.r1soft.com/r1soft.asc
+#     - name: R1SOFT || Add r1soft key
+#       raw: apt-key add /root/r1soft.asc
+#     - name: R1SOFT || Install r1soft agent
+#       apt:
+#         name: r1soft-cdp-enterprise-agent
+#         update_cache: yes
+#         state: latest
+# #    - name: Get the r1soft key from server
+# #      raw: r1soft-setup --get-key https://cdp.dal-tx.atlantic.net
+#     - name: R1SOFT || Enable and restart cdp-agent
+#       systemd:
+#         name: cdp-agent
+#         enabled: yes
+#         state: restarted    
+#     - name: TRENDMICRO || Install TrendMicro (part 1)
+#       command: wget https://209.208.116.206:4119/software/agent/Ubuntu_16.04/x86_64/ -O /tmp/agent.deb --no-check-certificate --quiet
+#     - name: TRENDMICRO || Install TrendMicro (part 2)
+#       command: dpkg -i /tmp/agent.deb
