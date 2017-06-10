@@ -2,7 +2,7 @@
 - include: debian.yml
   when: ansible_distribution == "Debian" || ansible_distribution == "Ubuntu"
 
-- include: centos.yml
+- include: redhat.yml
   when: ansible_os_family == "RedHat"
 
 - include: disable-other-firewalls.yml
