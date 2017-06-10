@@ -18,10 +18,10 @@
   register: cloudserver
 
 - debug:
-    msg: "{{cloudserver}}"
-  with_subelements:
+    msg: "{{item}}"
+  with_nested:
     - "{{cloudserver}}"
-    - results
+    - "{{results}}"
 
 # - name: Adding the new host to the dynamic host file
 #   add_host:
