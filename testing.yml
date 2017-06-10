@@ -27,8 +27,6 @@
          imageid: CentOS-7.3_64bit
          planname: "G2.2GB"
          ssh_key: "ansible"
-      async: 300
-      poll: 5
       register: derek_host2
 
     - name: Adding the new hosts to the host file
