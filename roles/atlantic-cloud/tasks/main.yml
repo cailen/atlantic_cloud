@@ -20,9 +20,8 @@
 - debug:
     msg: "{{item.0}}"
   with_nested:
-    - "{{cloudserver}}"
+    - "{{cloudserver.results}}"
     - results
-
 # - name: Adding the new host to the dynamic host file
 #   add_host:
 #     name: "{{ cloudserver.results.ip_address }}"
