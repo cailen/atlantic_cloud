@@ -1,6 +1,6 @@
 ---
 - debug:
-    msg: "{{item.1}} and {{item.0}}"
+    msg: "{{item}}"
   with_nested: 
     - "{{builds}}"
     - details
