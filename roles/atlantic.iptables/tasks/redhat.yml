@@ -6,10 +6,11 @@
 - name: Copy iptables template (Centos)
   template:
     src: templates/iptables.j2
-    dest: /etc/iptables
+    dest: /etc/sysconfig/iptables
+    force: yes
 
-- name: Restore from /etc/iptables (Debian)
-  raw: iptables-restore < /etc/iptables
+- name: Restore iptables (Centos)
+  raw: iptables-restore < /etc/sysconfig/iptables
 
 - name: Start iptables (Centos) 
   systemd:
