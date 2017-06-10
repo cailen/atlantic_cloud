@@ -31,6 +31,7 @@
 -A ATLANTIC-NET-MGMT -s cdp.tor-on.atlantic.net -p tcp -m tcp --dport 1167 -j ACCEPT -m comment --comment "CDP Toronto"
 -A ATLANTIC-NET-MGMT -s cdp.sfo-ca.atlantic.net -p tcp -m tcp --dport 1167 -j ACCEPT -m comment --comment "CDP San Francisco"
 {% endif %}
+
 {% if trendmicro == "yes" %}
 -A ATLANTIC-NET-MGMT -s 209.208.116.206 -p tcp -m tcp --dport 4118:4122 -j ACCEPT -m comment --comment "TrendMicro"
 {% endif %}
