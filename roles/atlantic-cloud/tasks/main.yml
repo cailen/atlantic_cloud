@@ -1,9 +1,8 @@
 ---
 - debug:
-    msg: "{{item.1}} and {{item.0}}"
-  with_nested: 
+    msg: "{{item}}"
+  with_items: 
     - "{{builds}}"
-    - build
 
 - name: "Atlantic_Net Cloud - Creating {{ item.servername }}"
   atlantic_cloud:
