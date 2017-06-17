@@ -13,7 +13,7 @@
           imageid: ubuntu-16.04_64bit
           planname: "G2.2GB"
           trendmicro: yes
-          backups: cdp
+          backups: cloud
         # - build: ids
         #   imageid: CentOS-7.3_64bit
         #   planname: "G2.2GB"
