@@ -49,7 +49,9 @@
 - debug:
     msg: "{{item}}"
   with_items: 
-    - cloudservers
+    - "{{cloudservers.hosts}}"
+    - cloudservers.ids
+    - cloudservers.firewall
 
 # - debug:
 #     msg: "{{item}}"
@@ -63,7 +65,7 @@
     groups: "cloud_{{item.0.item.build}}"
     when: (item.0.results.vm_image != "firewall") and (item.0.results.vm_image != "ubuntu-16.04_64bit") 
   with_nested:
-    - "{{cloudservers.results}}"
+    - "{{cloudservers.hosts}}"
     - results
 
 - name: Adding the new host to the dynamic host file (Ubuntu 16)
@@ -73,8 +75,16 @@
     groups: "cloud_{{item.0.item.build}}"
   when: item.0.results.vm_image == "ubuntu-16.04_64bit"
   with_nested:
-    - "{{cloudservers.results}}"
+    - "{{cloudservers.hosts}}"
     - results
+
+- name: Adding the new host to the dynamic host file (IDS)
+  add_host:
+    name: "{{ item.results.ip_address }}"
+    groups: "cloud_{{item.build}}"
+  when: item.build == "firewall"
+  with_items:
+    - cloudservers.ids
 
 - name: Adding the new host to the dynamic host file (Firewall)
   add_host:
@@ -84,7 +94,7 @@
     groups: "cloud_{{item.build}}"
   when: item.build == "firewall"
   with_items:
-    - cloudservers.firewall"
+    - cloudservers.firewall
 
 - set_fact:
     gateway: "{{item.0.results.vm_ip_gateway}}"

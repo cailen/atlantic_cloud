@@ -1,3 +1,4 @@
+---
 - name: Install snmpd (Ubuntu or Debian)
   apt:
     name: snmpd
