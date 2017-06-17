@@ -49,7 +49,7 @@
 - debug:
     msg: "{{item}}"
   with_items: 
-    - "{{cloudservers}}"
+    - cloudservers
 
 # - debug:
 #     msg: "{{item}}"
