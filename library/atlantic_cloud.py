@@ -233,7 +233,12 @@ class Cloudserver(JsonfyMixIn):
 
     @classmethod
     def add(cls, servername, planname, imageid, vm_location, key_id=None, enablebackup=False):
-        enablebackup_lower = str(enablebackup).lower()
+        if(enablebackup){
+            enablebackup = 'Y'
+        }
+        else{
+            enablebackup = 'N'
+        }
         cloudserver = cls.manager.new_cloudserver(servername, planname, imageid, vm_location, key_id=key_id, enablebackup=enablebackup_lower)
         for k, v in cloudserver.items():
             return cls(dict((x.lower(), y) for x, y in v.iteritems()))
@@ -316,7 +321,7 @@ def core(module):
                 else:
                     changed = False
                     msg = "Server details"
-                                        
+
         # Create a new server if you've made it this far
         if module.params['servername'] and not module.params['instanceid']:
             if module.params['ssh_key']:
@@ -341,7 +346,7 @@ def core(module):
             # Print out the results
             module.exit_json(changed=changed, msg=msg, results=results)
         module.fail_json(changed=False, msg="No server found")
-       
+
     # Delete a server or check to see if it doesn't exist
     elif state in ('absent', 'deleted'):
         if module.params['instanceid']:
