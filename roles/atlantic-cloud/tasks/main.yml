@@ -50,8 +50,8 @@
     msg: "{{item}}"
   with_items: 
     - "{{cloudservers.hosts}}"
-    - cloudservers.ids
-    - cloudservers.firewall
+    - "{{cloudservers.ids}}"
+    - "{{cloudservers.firewall}}"
 
 # - debug:
 #     msg: "{{item}}"
