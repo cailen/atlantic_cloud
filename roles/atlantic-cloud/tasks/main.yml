@@ -14,7 +14,7 @@
       imageid: "{{ item.imageid }}"
       planname: "{{ item.planname }}"
       ssh_key: "{{ ssh_key }}"
-      enablebackup: '{{ backup_options[item.backups == "cdp" | default("no")]}}'
+      enablebackup: '{{ backup_options[item.backups | default("no")]}}'
   with_items: "{{ builds }}"
   register: cloudservers
 
