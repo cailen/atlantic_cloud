@@ -1,7 +1,7 @@
 Here is the info for your new Atlantic.Net Cloud Servers:
 
-  VM ID: {{ cloudserver.results.vm_description }}
-  IP Address: {{cloudserver.results.ip_address}}
+  VM ID: {{ item.0.results.vm_description }}
+  IP Address: {{item.0.results.ip_address}}
 
-  Username: {{ cloudserver.results.username }}
-  Password: {{ cloudserver.results.password }}
+  Username: {{ item.0.results.username }}
+  Password: {{ item.0.results.password }}
