@@ -18,7 +18,7 @@ import ansible.module_utils.basic
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 ANSIBLE_METADATA = {'status': ['preview'],
                     'supported_by': 'community',
-                    'version': '0.1.5'}
+                    'version': '0.1.6'}
 
 DOCUMENTATION = '''
 ---
@@ -57,9 +57,9 @@ options:
     choices: ['USEAST1', 'USEAST2', 'USCENTRAL1', 'USWEST1', 'CAEAST1', 'EUWEST1']
   enablebackup:
     description:
-     - Optional, Boolean, enables backups for your cloudserver.
-    default: "no"
-    choices: [ "yes", "no" ]
+     - Optional, enables backups for your cloudserver.
+    default: "N"
+    choices: [ "Y", "N" ]
   wait:
     description:
      - Wait for the cloudserver to be in state 'running' before returning.  If wait is "no" an ip_address may not be returned.
@@ -207,9 +207,8 @@ class Cloudserver(JsonfyMixIn):
         cls.manager = AnetManager(public_key, private_key)
 
     @classmethod
-    def add(cls, servername, planname, imageid, vm_location, key_id=None, enablebackup=False):
-        enablebackup_lower = str(enablebackup).lower()
-        cloudserver = cls.manager.new_cloudserver(servername, planname, imageid, vm_location, key_id=key_id, enablebackup=enablebackup_lower)
+    def add(cls, servername, planname, imageid, vm_location, key_id=None, enablebackup='N'):
+        cloudserver = cls.manager.new_cloudserver(servername, planname, imageid, vm_location, key_id=key_id, enablebackup=enablebackup)
         for k, v in cloudserver.items():
             return cls(dict((x.lower(), y) for x, y in v.iteritems()))
 
@@ -338,7 +337,7 @@ def main():
             planname = dict(type='str'),
             imageid = dict(type='str'),
             vm_location = dict(type='str', choices=['USEAST1', 'USEAST2', 'USCENTRAL1', 'USWEST1', 'CAEAST1', 'EUWEST1'], default='USEAST1'),
-            enablebackup = dict(type='bool', default='no'),
+            enablebackup = dict(type='str', choices=['Y', 'N'], default='N'),
             instanceid = dict(type='int'),
             wait = dict(type='bool', default=True),
             wait_timeout = dict(default=300, type='int'),
