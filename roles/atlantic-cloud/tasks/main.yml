@@ -37,7 +37,7 @@
       state: present
       public_key: "{{ public_key }}"
       private_key: "{{ private_key }}"
-      servername: "{{cu_id}}-{{datacenters[datacenter]}}-{{item.build}}"
+      servername: "{{cu_id}}-{{datacenters[datacenter]}}-ids"
       vm_location: "{{ datacenter }}"
       imageid: "CentOS-6.9_64bit"
       planname: "G2.2GB"
