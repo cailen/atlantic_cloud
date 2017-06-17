@@ -47,7 +47,7 @@
   register: cloudservers
 
 - debug:
-    msg: "{{item.0.results}}"
+    msg: "{{item}}"
   with_nested:
     - "{{cloudservers.results}}"
     - results
