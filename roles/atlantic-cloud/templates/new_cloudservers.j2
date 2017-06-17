@@ -1,0 +1,47 @@
+Here is the info for your new Atlantic.Net Cloud Servers:
+
+{% for cloudserver in cloudservers.results %}
+  {% if 'fw' in cloudserver.results.vm_description %}
+    {{ cloudserver.results.vm_description }} (VMID: {{ cloudserver.results.instanceid }}) - {{ cloudserver.results.vm_image_display_name }}
+    ========================================
+    IP Address: {{cloudserver.results.ip_address}}/{{cidr}}
+    Private IP: {{ firewall.private_range | ipaddr('net') | ipaddr('1')}}
+    Username: {{ cloudserver.results.username }}
+    Password: {{ cloudserver.results.password }}
+
+    Gateway: {{ gateway }}
+    Private Range: {{ firewall.private_range }}
+
+    VPN Information
+    ----------------------------------------
+    VPN IP Address: {{cloudserver.results.ip_address}}
+    Identifier: {{ identifier }}
+    Preshared Key: {{ psk }}
+ {% endif %}
+{% endfor %}
+{% for cloudserver in cloudservers.results %}
+  {% if 'ids' in cloudserver.results.vm_description %}
+    {{ cloudserver.results.vm_description }} (VMID: {{ cloudserver.results.instanceid }}) - {{ cloudserver.results.vm_image_display_name }}
+    ========================================
+    IP Address: {{cloudserver.results.ip_address}}
+    Private IP: {{ firewall.private_range | ipaddr('net') | ipaddr('2')}} 
+    Username: {{ cloudserver.results.username }}
+    Password: {{ cloudserver.results.password }}
+
+    Snorby Login:
+    -------------------------------------------
+    http://{{ firewall.private_range | ipaddr('net') | ipaddr('1')}}:3000
+  {% endif %}
+{% endfor %}
+{% set privateips = [3] %}
+{% for cloudserver in cloudservers.results %}
+  {% if 'host' in cloudserver.results.vm_description %}
+    {{ cloudserver.results.vm_description }} (VMID: {{ cloudserver.results.instanceid }}) - {{ cloudserver.results.vm_image_display_name }}
+    ========================================
+    IP Address: {{cloudserver.results.ip_address}}
+    Private IP: {{ firewall.private_range | ipaddr('net') | ipaddr(privateips)}}
+    Username: {{ cloudserver.results.username }}
+    Password: {{ cloudserver.results.password }}
+  {% endif %}
+  {% set privateips = privateips + 1 %}
+{% endfor %}

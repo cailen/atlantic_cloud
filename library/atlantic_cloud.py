@@ -18,7 +18,7 @@ import ansible.module_utils.basic
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 ANSIBLE_METADATA = {'status': ['preview'],
                     'supported_by': 'community',
-                    'version': '0.1.5'}
+                    'version': '0.1.6'}
 
 DOCUMENTATION = '''
 ---
@@ -390,3 +390,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    

@@ -4,7 +4,7 @@
   with_items: 
     - "{{builds}}"
 
-- name: "Atlantic_Net Cloud - Creating servers"
+- name: "Atlantic_Net Cloud - Creating hosts"
   atlantic_cloud:
       state: present
       public_key: "{{ public_key }}"
@@ -16,6 +16,34 @@
       ssh_key: "{{ ssh_key }}"
       enablebackup: '{{ backup_options[item.backups | default("N")]}}'
   with_items: "{{ builds }}"
+  register: cloudservers
+
+  - name: "Atlantic_Net Cloud - Creating firewall"
+  atlantic_cloud:
+      state: present
+      public_key: "{{ public_key }}"
+      private_key: "{{ private_key }}"
+      servername: "{{cu_id}}-{{datacenters[datacenter]}}-fw"
+      vm_location: "{{ datacenter }}"
+      imageid: "FreeBSD-10.1-pfsense_64bit"
+      planname: "G2.2GB"
+      ssh_key: "{{ ssh_key }}"
+      enablebackup: 'Y'
+  when: firewall
+  register: cloudservers
+
+  - name: "Atlantic_Net Cloud - Creating IDS"
+  atlantic_cloud:
+      state: present
+      public_key: "{{ public_key }}"
+      private_key: "{{ private_key }}"
+      servername: "{{cu_id}}-{{datacenters[datacenter]}}-{{item.build}}"
+      vm_location: "{{ datacenter }}"
+      imageid: "CentOS-6.9_64bit"
+      planname: "G2.2GB"
+      ssh_key: "{{ ssh_key }}"
+      enablebackup: 'Y'
+  when: ids
   register: cloudservers
 
 - debug:
@@ -33,7 +61,7 @@
     - "{{cloudservers.results}}"
     - results
 
-- name: Adding the new host to the dynamic host file
+- name: Adding the new host to the dynamic host file (Ubuntu 16)
   add_host:
     name: "{{ item.0.results.ip_address }}"
     ansible_python_interpreter: /usr/bin/python3
@@ -43,7 +71,7 @@
     - "{{cloudservers.results}}"
     - results
 
-- name: Adding the new host to the dynamic host file
+- name: Adding the new host to the dynamic host file (Firewall)
   add_host:
     name: "{{ item.0.results.ip_address }}"
     ansible_python_interpreter: /usr/local/bin/python2.7
@@ -57,17 +85,14 @@
 - set_fact:
     gateway: "{{item.0.results.vm_ip_gateway}}"
     cidr: "{{ '{{ item.0.results.vm_ip_address }}/{{ item.0.results.vm_ip_subnet }}' | ipaddr('prefix') }}"
-    ip_address: "{{ item.0.results.vm_ip_address}}"
-  when: item.0.item.build == "firewall"
+    fw_ip_address: "{{ item.0.results.vm_ip_address}}"
+  when: "'pfSense' in item.0.results.vm_description"
   with_nested:
     - "{{cloudservers.results}}"
     - results
 
 - name: Sending info to file
-  template: src=/etc/ansible/templates/new_cloudserver.j2 dest=/etc/ansible/{{item.0.results.vm_description}}_details owner=root group=root mode=644
-  with_nested:
-    - "{{cloudservers.results}}"
-    - results
+  template: src=templates/new_cloudservers.j2 dest=/etc/ansible/{{cu_id}}_new_order owner=root group=root mode=644
 
 - name: Waiting for server to come online...
   local_action:
