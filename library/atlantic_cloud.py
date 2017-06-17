@@ -362,7 +362,7 @@ def main():
             planname = dict(type='str'),
             imageid = dict(type='str'),
             vm_location = dict(type='str'),
-            enablebackup = dict(type='str', choices=['Y', 'N'], default=True),
+            enablebackup = dict(type='str', choices=['Y', 'N'], default='N'),
             instanceid = dict(type='int'),
             wait = dict(type='bool', default=True),
             wait_timeout = dict(default=300, type='int'),
