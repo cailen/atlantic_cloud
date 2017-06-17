@@ -1,0 +1,15 @@
+---
+- name: Add file to disable iptables flushing
+  file:
+    state: touch
+    path: /etc/use_dsa_with_iptables
+
+- name: Get the TrendMicro agent
+  get_url:
+    url: https://209.208.116.206:4119/software/agent/Ubuntu_16.04/x86_64/
+    dest: "/tmp/agent.deb"
+    validate_certs: no
+
+- name: Install TrendMicro agent
+  apt: 
+    deb: /tmp/agent.deb

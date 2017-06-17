@@ -9,53 +9,73 @@
       state: present
       public_key: "{{ public_key }}"
       private_key: "{{ private_key }}"
-      servername: "{{ item.servername }}"
+      servername: "{{cu_id}}-{{datacenters[datacenter]}}-{{item.build}}"
       vm_location: "{{ datacenter }}"
       imageid: "{{ item.imageid }}"
       planname: "{{ item.planname }}"
       ssh_key: "{{ ssh_key }}"
+      enablebackup: '{{ backup_options[item.backups == "cdp" | default("no")]}}'
   with_items: "{{ builds }}"
-  register: cloudserver
+  register: cloudservers
 
 - debug:
     msg: "{{item.0.results}}"
   with_nested:
-    - "{{cloudserver.results}}"
+    - "{{cloudservers.results}}"
     - results
-# - name: Adding the new host to the dynamic host file
-#   add_host:
-#     name: "{{ cloudserver.results.ip_address }}"
-#     groups: "cloud_{{build_type}}"
-#     when: (build_type != "firewall") and (imageid != "ubuntu-16.04_64bit") 
 
-# - name: Adding the new host to the dynamic host file
-#   add_host:
-#     name: "{{ cloudserver.results.ip_address }}"
-#     ansible_python_interpreter: /usr/bin/python3
-#     groups: "cloud_{{build_type}}"
-#   when: os == "ubuntu-16.04_64bit"
+- name: Adding the new host to the dynamic host file
+  add_host:
+    name: "{{ item.0.results.ip_address }}"
+    groups: "cloud_{{item.0.item.build}}"
+    when: (item.0.results.vm_image != "firewall") and (item.0.results.vm_image != "ubuntu-16.04_64bit") 
+  with_nested:
+    - "{{cloudservers.results}}"
+    - results
 
-# - name: Adding the new host to the dynamic host file
-#   add_host:
-#     name: "{{ cloudserver.results.ip_address }}"
-#     ansible_python_interpreter: /usr/local/bin/python2.7
-#     ansible_ssh_pass: "Nrprocks!"
-#     groups: "cloud_{{build_type}}"
-#   when: build_type == "firewall"
+- name: Adding the new host to the dynamic host file
+  add_host:
+    name: "{{ item.0.results.ip_address }}"
+    ansible_python_interpreter: /usr/bin/python3
+    groups: "cloud_{{item.0.item.build}}"
+  when: "{{item.0.results.vm_image}}" == "ubuntu-16.04_64bit"
+  with_nested:
+    - "{{cloudservers.results}}"
+    - results
 
-# - set_fact:
-#     gateway: "{{cloudserver.results.vm_ip_gateway}}"
-#     cidr: "{{ '{{ cloudserver.results.vm_ip_address }}/{{ cloudserver.results.vm_ip_subnet }}' | ipaddr('prefix') }}"
-#     ip_address: "{{ cloudserver.results.vm_ip_address}}"
-#   when: build_type == "firewall"
+- name: Adding the new host to the dynamic host file
+  add_host:
+    name: "{{ item.0.results.ip_address }}"
+    ansible_python_interpreter: /usr/local/bin/python2.7
+    ansible_ssh_pass: "Nrprocks!"
+    groups: "cloud_{{item.0.item.build}}"
+  when: "{{item.0.item.build}}" == "firewall"
+  with_nested:
+    - "{{cloudservers.results}}"
+    - results
 
-# - name: Sending info to file
-#   template: src=/etc/ansible/templates/new_cloudserver.j2 dest=/etc/ansible/{{cloudserver.results.vm_description}}_details owner=root group=root mode=644
+- set_fact:
+    gateway: "{{item.0.results.vm_ip_gateway}}"
+    cidr: "{{ '{{ item.0.results.vm_ip_address }}/{{ item.0.results.vm_ip_subnet }}' | ipaddr('prefix') }}"
+    ip_address: "{{ item.0.results.vm_ip_address}}"
+  when: "{{item.0.item.build}}" == "firewall"
+  with_nested:
+    - "{{cloudservers.results}}"
+    - results
 
-# - name: Waiting for server to come online...
-#   local_action:
-#     module: wait_for
-#       host={{ cloudserver.results.ip_address }}
-#       port=22
-#       delay=20
-#       timeout=300
+- name: Sending info to file
+  template: src=/etc/ansible/templates/new_cloudserver.j2 dest=/etc/ansible/{{item.0.results.vm_description}}_details owner=root group=root mode=644
+  with_nested:
+    - "{{cloudservers.results}}"
+    - results
+
+- name: Waiting for server to come online...
+  local_action:
+    module: wait_for
+      host={{ item.0.results.ip_address }}
+      port=22
+      delay=20
+      timeout=300
+  with_nested:
+    - "{{cloudservers.results}}"
+    - results

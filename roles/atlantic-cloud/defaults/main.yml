@@ -1,0 +1,11 @@
+---
+datacenters:
+  USEAST1: orl
+  USEAST2: nyc
+  USCENTRAL1: dal
+  USWEST1: sfo
+  CAEAST1: tor
+  EUWEST1: lon
+backup_options:
+  cdp: no
+  cloud: yes
