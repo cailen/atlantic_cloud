@@ -16,7 +16,7 @@
       ssh_key: "{{ ssh_key }}"
       enablebackup: '{{ backup_options[item.backups | default("N")]}}'
   with_items: "{{ builds }}"
-  register: cloudservers
+  register: cloudservers.hosts
 
 - name: "Atlantic_Net Cloud - Creating firewall"
   atlantic_cloud:
@@ -30,7 +30,7 @@
       ssh_key: "{{ ssh_key }}"
       enablebackup: 'Y'
   when: firewall
-  register: cloudservers
+  register: cloudservers.ids
 
 - name: "Atlantic_Net Cloud - Creating IDS"
   atlantic_cloud:
@@ -44,13 +44,18 @@
       ssh_key: "{{ ssh_key }}"
       enablebackup: 'Y'
   when: ids
-  register: cloudservers
+  register: cloudservers.firewall
 
 - debug:
     msg: "{{item}}"
-  with_nested:
-    - "{{cloudservers.results}}"
-    - results
+  with_items: 
+    - "{{cloudservers}}"
+
+# - debug:
+#     msg: "{{item}}"
+#   with_nested:
+#     - "{{cloudservers.results}}"
+#     - results
 
 - name: Adding the new host to the dynamic host file
   add_host:
@@ -73,14 +78,13 @@
 
 - name: Adding the new host to the dynamic host file (Firewall)
   add_host:
-    name: "{{ item.0.results.ip_address }}"
+    name: "{{ item.results.ip_address }}"
     ansible_python_interpreter: /usr/local/bin/python2.7
     ansible_ssh_pass: "Nrprocks!"
-    groups: "cloud_{{item.0.item.build}}"
-  when: item.0.item.build == "firewall"
-  with_nested:
-    - "{{cloudservers.results}}"
-    - results
+    groups: "cloud_{{item.build}}"
+  when: item.build == "firewall"
+  with_items:
+    - cloudservers.firewall"
 
 - set_fact:
     gateway: "{{item.0.results.vm_ip_gateway}}"
