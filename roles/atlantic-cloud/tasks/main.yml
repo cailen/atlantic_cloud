@@ -18,7 +18,7 @@
   with_items: "{{ builds }}"
   register: cloudservers
 
-  - name: "Atlantic_Net Cloud - Creating firewall"
+- name: "Atlantic_Net Cloud - Creating firewall"
   atlantic_cloud:
       state: present
       public_key: "{{ public_key }}"
@@ -32,7 +32,7 @@
   when: firewall
   register: cloudservers
 
-  - name: "Atlantic_Net Cloud - Creating IDS"
+- name: "Atlantic_Net Cloud - Creating IDS"
   atlantic_cloud:
       state: present
       public_key: "{{ public_key }}"
