@@ -7,5 +7,5 @@ datacenters:
   CAEAST1: tor
   EUWEST1: lon
 backup_options:
-  cdp: no
-  cloud: yes
+  cdp: 'N'
+  cloud: 'Y'

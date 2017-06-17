@@ -3,8 +3,6 @@
   vars:
     - cu_id: 77555
     - datacenter: USEAST1
-    - firewall: yes
-    - ids: yes
     - public_key: ATL8f59337f60fb45e4ff600c38e62ab540
     - private_key: 66f002a2b6c5d742a9ce6d6e4de333534c73b128
     - ssh_key: "ansible"
@@ -14,6 +12,8 @@
           planname: "G2.2GB"
           trendmicro: yes
           backups: cloud
+    - firewall: yes
+    - ids: yes
         # - build: ids
         #   imageid: CentOS-7.3_64bit
         #   planname: "G2.2GB"

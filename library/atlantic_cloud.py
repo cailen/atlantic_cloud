@@ -232,14 +232,8 @@ class Cloudserver(JsonfyMixIn):
         cls.manager = AnetManager(public_key, private_key)
 
     @classmethod
-    def add(cls, servername, planname, imageid, vm_location, key_id=None, enablebackup=False):
-        if(enablebackup){
-            enablebackup = 'Y'
-        }
-        else{
-            enablebackup = 'N'
-        }
-        cloudserver = cls.manager.new_cloudserver(servername, planname, imageid, vm_location, key_id=key_id, enablebackup=enablebackup_lower)
+    def add(cls, servername, planname, imageid, vm_location, key_id=None, enablebackup='N'):
+        cloudserver = cls.manager.new_cloudserver(servername, planname, imageid, vm_location, key_id=key_id, enablebackup=enablebackup)
         for k, v in cloudserver.items():
             return cls(dict((x.lower(), y) for x, y in v.iteritems()))
 
@@ -370,7 +364,7 @@ def main():
             vm_location = dict(type='str'),
             enablebackup = dict(type='bool', default='no'),
             instanceid = dict(type='int'),
-            wait = dict(type='bool', default=True),
+            wait = dict(type='str', choices=['Y', 'N'], default=True),
             wait_timeout = dict(default=300, type='int'),
             ssh_key = dict(type='str'),
             server_qty = dict(type='int', default=1),
