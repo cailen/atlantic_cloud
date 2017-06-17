@@ -16,7 +16,7 @@
       ssh_key: "{{ ssh_key }}"
       enablebackup: '{{ backup_options[item.backups | default("N")]}}'
   with_items: "{{ builds }}"
-  register: cloudservers.hosts
+  register: cloudserver_hosts
 
 - name: "Atlantic_Net Cloud - Creating firewall"
   atlantic_cloud:
@@ -30,7 +30,7 @@
       ssh_key: "{{ ssh_key }}"
       enablebackup: 'Y'
   when: firewall
-  register: cloudservers.ids
+  register: cloudserver_ids
 
 - name: "Atlantic_Net Cloud - Creating IDS"
   atlantic_cloud:
@@ -44,14 +44,14 @@
       ssh_key: "{{ ssh_key }}"
       enablebackup: 'Y'
   when: ids
-  register: cloudservers.firewall
+  register: cloudserver_firewall
 
 - debug:
     msg: "{{item}}"
   with_items: 
-    - "{{cloudservers.hosts}}"
-    - "{{cloudservers.ids}}"
-    - "{{cloudservers.firewall}}"
+    - "{{cloudserver_hosts}}"
+    - "{{cloudserver_ids}}"
+    - "{{cloudserver_firewall}}"
 
 # - debug:
 #     msg: "{{item}}"
