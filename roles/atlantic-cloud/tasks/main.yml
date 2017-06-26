@@ -90,7 +90,8 @@
 
 - set_fact:
     gateway: "{{item.results.vm_ip_gateway}}"
-    cidr: "{{ '{{ item.results.vm_ip_address }}/{{ item.results.vm_ip_subnet }}' | ipaddr('prefix') }}"
+    firewall_net_mask: "{{ item.results.vm_ip_address }}/{{ item.results.vm_ip_subnet }}"
+    cidr: "{{ firewall_net_mask | ipaddr('prefix') }}"
     fw_ip_address: "{{ item.results.vm_ip_address}}"
   when: firewall
   with_items:
@@ -104,7 +105,7 @@
     module: wait_for
       host={{ item.results.ip_address }}
       port=22
-      delay=20
+      delay=5
       timeout=300
   with_items:
     - "{{cloudserver_hosts.results}}"
@@ -114,7 +115,7 @@
     module: wait_for
       host={{ item.results.ip_address }}
       port=22
-      delay=20
+      delay=5
       timeout=300
   with_items:
     - "{{cloudserver_ids}}"
@@ -124,7 +125,7 @@
     module: wait_for
       host={{ item.results.ip_address }}
       port=22
-      delay=20
+      delay=5
       timeout=300
   with_items:
     - "{{cloudserver_firewall}}"
