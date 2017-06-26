@@ -47,9 +47,10 @@
 #   register: cloudserver_firewall
 
 - debug:
-    msg: item.results
-  with_items: 
-    - cloudserver_hosts
+    msg: item.0.results
+  with_subelements: 
+    - "{{cloudserver_hosts}}"
+    - results
     # - "{{cloudserver_ids}}"
     # - "{{cloudserver_firewall}}"
 
