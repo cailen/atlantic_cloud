@@ -88,6 +88,11 @@
   with_items:
     - "{{cloudserver_firewall}}"
 
+- debug:
+    msg: "{{item}}"
+  with_items:
+    - "{{cloudserver_firewall}}"
+
 - set_fact:
     gateway: "{{item.results.vm_ip_gateway}}"
     firewall_net_mask: "{{ item.results.vm_ip_address }}/{{ item.results.vm_ip_subnet }}"
