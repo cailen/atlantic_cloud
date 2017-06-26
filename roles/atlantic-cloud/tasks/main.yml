@@ -88,14 +88,16 @@
   with_items:
     - "{{cloudserver_firewall}}"
 
-- debug:
-    msg: "{{item}}"
+
+- set_fact:
+    firewall_net_mask: "{{ item.results.vm_ip_address }}/{{ item.results.vm_ip_subnet }}"
+  when: firewall
   with_items:
     - "{{cloudserver_firewall}}"
 
 - set_fact:
     gateway: "{{item.results.vm_ip_gateway}}"
-    firewall_net_mask: "{{ item.results.vm_ip_address }}/{{ item.results.vm_ip_subnet }}"
+    # firewall_net_mask: "{{ item.results.vm_ip_address }}/{{ item.results.vm_ip_subnet }}"
     cidr: "{{ firewall_net_mask | ipaddr('prefix') }}"
     fw_ip_address: "{{ item.results.vm_ip_address}}"
   when: firewall
