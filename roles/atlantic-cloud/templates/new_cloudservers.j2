@@ -29,7 +29,7 @@ Here is the info for your new Atlantic.Net Cloud Servers:
   -------------------------------------------
   http://{{ private_range | ipaddr('net') | ipaddr('1')}}:3000
 {% endif %}
-{% set privateips = [3] %}
+{% set privateips = 3 %}
 {% for cloudserver in cloudserver_hosts.results %}
   {{ cloudserver.results.vm_description }} (VMID: {{ cloudserver.results.instanceid }}) - {{ cloudserver.results.vm_image_display_name }}
   ========================================
