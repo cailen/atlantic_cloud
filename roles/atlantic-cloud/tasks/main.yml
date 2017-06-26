@@ -63,39 +63,38 @@
 
 - name: Adding the new host to the dynamic host file (Ubuntu 16)
   add_host:
-    name: "{{ item.0.results.ip_address }}"
+    name: "{{ item.results.ip_address }}"
     ansible_python_interpreter: /usr/bin/python3
-    groups: "cloud_{{item.0.item.build}}"
-  when: item.0.results.vm_image == "ubuntu-16.04_64bit"
-  with_nested:
-    - "{{cloudserver_hosts}}"
-    - results
+    groups: "cloud_{{item.item.build}}"
+  when: item.results.vm_image == "ubuntu-16.04_64bit"
+  with_items:
+    - "{{cloudserver_hosts.results}}"
 
-# - name: Adding the new host to the dynamic host file (IDS)
-#   add_host:
-#     name: "{{ item.results.ip_address }}"
-#     groups: "cloud_ids"
-#   when: ids
-#   with_items:
-#     - "{{cloudserver_ids}}"
+- name: Adding the new host to the dynamic host file (IDS)
+  add_host:
+    name: "{{ item.results.ip_address }}"
+    groups: "cloud_ids"
+  when: ids
+  with_items:
+    - "{{cloudserver_ids}}"
 
-# - name: Adding the new host to the dynamic host file (Firewall)
-#   add_host:
-#     name: "{{ item.results.ip_address }}"
-#     ansible_python_interpreter: /usr/local/bin/python2.7
-#     ansible_ssh_pass: "Nrprocks!"
-#     groups: "cloud_firewall"
-#   when: firewall
-#   with_items:
-#     - "{{cloudserver_firewall}}"
+- name: Adding the new host to the dynamic host file (Firewall)
+  add_host:
+    name: "{{ item.results.ip_address }}"
+    ansible_python_interpreter: /usr/local/bin/python2.7
+    ansible_ssh_pass: "Nrprocks!"
+    groups: "cloud_firewall"
+  when: firewall
+  with_items:
+    - "{{cloudserver_firewall}}"
 
-# - set_fact:
-#     gateway: "{{item.results.vm_ip_gateway}}"
-#     cidr: "{{ '{{ item.results.vm_ip_address }}/{{ item.results.vm_ip_subnet }}' | ipaddr('prefix') }}"
-#     fw_ip_address: "{{ item.results.vm_ip_address}}"
-#   when: firewall
-#   with_items:
-#     - "{{cloudserver_firewall}}"
+- set_fact:
+    gateway: "{{item.results.vm_ip_gateway}}"
+    cidr: "{{ '{{ item.results.vm_ip_address }}/{{ item.results.vm_ip_subnet }}' | ipaddr('prefix') }}"
+    fw_ip_address: "{{ item.results.vm_ip_address}}"
+  when: firewall
+  with_items:
+    - "{{cloudserver_firewall}}"
 
 - name: Sending info to file
   template: src=templates/new_cloudservers.j2 dest=/etc/ansible/{{cu_id}}_new_order owner=root group=root mode=644
@@ -111,22 +110,22 @@
     - "{{cloudservers_hosts}}"
     - results
 
-# - name: Waiting for IDS server to come online...
-#   local_action:
-#     module: wait_for
-#       host={{ item.results.ip_address }}
-#       port=22
-#       delay=20
-#       timeout=300
-#   with_items:
-#     - "{{cloudserver_ids}}"
+- name: Waiting for IDS server to come online...
+  local_action:
+    module: wait_for
+      host={{ item.results.ip_address }}
+      port=22
+      delay=20
+      timeout=300
+  with_items:
+    - "{{cloudserver_ids}}"
 
-# - name: Waiting for firewall server to come online...
-#   local_action:
-#     module: wait_for
-#       host={{ item.results.ip_address }}
-#       port=22
-#       delay=20
-#       timeout=300
-#   with_items:
-#     - "{{cloudserver_firewall}}"
+- name: Waiting for firewall server to come online...
+  local_action:
+    module: wait_for
+      host={{ item.results.ip_address }}
+      port=22
+      delay=20
+      timeout=300
+  with_items:
+    - "{{cloudserver_firewall}}"
