@@ -53,28 +53,30 @@
     - "{{cloudserver_ids}}"
     - "{{cloudserver_firewall}}"
 
-# - debug:
-#     msg: "{{item}}"
-#   with_nested:
-#     - "{{cloudservers.results}}"
-#     - results
+- debug:
+    msg: "{{item}}"
+  with_nested:
+    - "{{cloudservers_hosts}}"
+    - results
 
 - name: Adding the new host to the dynamic host file
   add_host:
-    name: "{{ item.results.ip_address }}"
-    groups: "cloud_{{item.item.build}}"
-    when: (item.results.vm_image != "firewall") and (item.results.vm_image != "ubuntu-16.04_64bit") 
-  with_items:
+    name: "{{ item.0.results.ip_address }}"
+    groups: "cloud_{{item.0.item.build}}"
+    when: (item.0.results.vm_image != "firewall") and (item.0.results.vm_image != "ubuntu-16.04_64bit") 
+  with_nested:
     - "{{cloudserver_hosts}}"
+    - results
 
 - name: Adding the new host to the dynamic host file (Ubuntu 16)
   add_host:
-    name: "{{ item.results.ip_address }}"
+    name: "{{ item.0.results.ip_address }}"
     ansible_python_interpreter: /usr/bin/python3
-    groups: "cloud_{{item.item.build}}"
-  when: item.results.vm_image == "ubuntu-16.04_64bit"
-  with_items:
+    groups: "cloud_{{item.0.item.build}}"
+  when: item.0.results.vm_image == "ubuntu-16.04_64bit"
+  with_nested:
     - "{{cloudserver_hosts}}"
+    - results
 
 - name: Adding the new host to the dynamic host file (IDS)
   add_host:
@@ -105,7 +107,7 @@
 - name: Sending info to file
   template: src=templates/new_cloudservers.j2 dest=/etc/ansible/{{cu_id}}_new_order owner=root group=root mode=644
 
-- name: Waiting for server to come online...
+- name: Waiting for host servers to come online...
   local_action:
     module: wait_for
       host={{ item.0.results.ip_address }}
@@ -113,5 +115,25 @@
       delay=20
       timeout=300
   with_nested:
-    - "{{cloudservers.results}}"
+    - "{{cloudservers_hosts}}"
     - results
+
+- name: Waiting for IDS server to come online...
+  local_action:
+    module: wait_for
+      host={{ item.results.ip_address }}
+      port=22
+      delay=20
+      timeout=300
+  with_items:
+    - "{{cloudserver_ids}}"
+
+- name: Waiting for firewall server to come online...
+  local_action:
+    module: wait_for
+      host={{ item.results.ip_address }}
+      port=22
+      delay=20
+      timeout=300
+  with_items:
+    - "{{cloudserver_firewall}}"
