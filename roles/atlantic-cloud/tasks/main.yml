@@ -61,22 +61,20 @@
 
 - name: Adding the new host to the dynamic host file
   add_host:
-    name: "{{ item.0.results.ip_address }}"
-    groups: "cloud_{{item.0.item.build}}"
-    when: (item.0.results.vm_image != "firewall") and (item.0.results.vm_image != "ubuntu-16.04_64bit") 
-  with_nested:
+    name: "{{ item.results.ip_address }}"
+    groups: "cloud_{{item.item.build}}"
+    when: (item.results.vm_image != "firewall") and (item.results.vm_image != "ubuntu-16.04_64bit") 
+  with_items:
     - "{{cloudserver_hosts}}"
-    - results
 
 - name: Adding the new host to the dynamic host file (Ubuntu 16)
   add_host:
-    name: "{{ item.0.results.ip_address }}"
+    name: "{{ item.results.ip_address }}"
     ansible_python_interpreter: /usr/bin/python3
-    groups: "cloud_{{item.0.item.build}}"
-  when: item.0.results.vm_image == "ubuntu-16.04_64bit"
-  with_nested:
+    groups: "cloud_{{item.item.build}}"
+  when: item.results.vm_image == "ubuntu-16.04_64bit"
+  with_items:
     - "{{cloudserver_hosts}}"
-    - results
 
 - name: Adding the new host to the dynamic host file (IDS)
   add_host:
