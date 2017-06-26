@@ -47,21 +47,19 @@
 #   register: cloudserver_firewall
 
 - debug:
-    msg: item.0.results
-  with_subelements: 
-    - "{{cloudserver_hosts}}"
-    - results
+    msg: item.results
+  with_items:
+    - "{{cloudserver_hosts.results}}"
     # - "{{cloudserver_ids}}"
     # - "{{cloudserver_firewall}}"
 
 - name: Adding the new host to the dynamic host file
   add_host:
-    name: "{{ item.0.results.ip_address }}"
-    groups: "cloud_{{item.0.item.build}}"
-    when: (item.0.results.vm_image != "firewall") and (item.0.results.vm_image != "ubuntu-16.04_64bit") 
-  with_nested:
-    - "{{cloudserver_hosts}}"
-    - results
+    name: "{{ item.results.ip_address }}"
+    groups: "cloud_{{item.item.build}}"
+    when: (item.results.vm_image != "firewall") and (item.results.vm_image != "ubuntu-16.04_64bit") 
+  with_items:
+    - "{{cloudserver_hosts.results}}"
 
 - name: Adding the new host to the dynamic host file (Ubuntu 16)
   add_host:
