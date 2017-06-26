@@ -30,7 +30,7 @@
       ssh_key: "{{ ssh_key }}"
       enablebackup: 'Y'
   when: firewall
-  register: cloudserver_ids
+  register: cloudserver_firewall
 
 - name: "Atlantic_Net Cloud - Creating IDS"
   atlantic_cloud:
@@ -44,7 +44,7 @@
       ssh_key: "{{ ssh_key }}"
       enablebackup: 'Y'
   when: ids
-  register: cloudserver_firewall
+  register: cloudserver_ids
 
 # - debug:
 #     msg: item.results
