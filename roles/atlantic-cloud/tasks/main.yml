@@ -54,7 +54,7 @@
     - "{{cloudserver_firewall}}"
 
 - debug:
-    msg: "{{item}}"
+    msg: "{{item.0}}"
   with_nested:
     - "{{cloudserver_hosts}}"
     - results
