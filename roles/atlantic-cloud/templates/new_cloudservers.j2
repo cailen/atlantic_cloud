@@ -1,40 +1,36 @@
 Here is the info for your new Atlantic.Net Cloud Servers:
 
-{% for cloudserver in cloudservers.results %}
-  {% if 'fw' in cloudserver.results.vm_description %}
-    {{ cloudserver.results.vm_description }} (VMID: {{ cloudserver.results.instanceid }}) - {{ cloudserver.results.vm_image_display_name }}
-    ========================================
-    IP Address: {{cloudserver.results.ip_address}}/{{cidr}}
-    Private IP: {{ firewall.private_range | ipaddr('net') | ipaddr('1')}}
-    Username: {{ cloudserver.results.username }}
-    Password: {{ cloudserver.results.password }}
+{% if 'firewall' %}
+  {{ cloudserver_firewall.results.vm_description }} (VMID: {{ cloudserver_firewall.results.instanceid }}) - {{ cloudserver.results.vm_image_display_name }}
+  ========================================
+  IP Address: {{cloudserver_firewall.results.ip_address}}/{{cidr}}
+  Private IP: {{ firewall.private_range | ipaddr('net') | ipaddr('1')}}
+  Username: {{ cloudserver_firewall.results.username }}
+  Password: {{ cloudserver_firewall.results.password }}
 
-    Gateway: {{ gateway }}
-    Private Range: {{ firewall.private_range }}
+  Gateway: {{ gateway }}
+  Private Range: {{ firewall.private_range }}
 
-    VPN Information
-    ----------------------------------------
-    VPN IP Address: {{cloudserver.results.ip_address}}
-    Identifier: {{ identifier }}
-    Preshared Key: {{ psk }}
- {% endif %}
-{% endfor %}
-{% for cloudserver in cloudservers.results %}
-  {% if 'ids' in cloudserver.results.vm_description %}
-    {{ cloudserver.results.vm_description }} (VMID: {{ cloudserver.results.instanceid }}) - {{ cloudserver.results.vm_image_display_name }}
-    ========================================
-    IP Address: {{cloudserver.results.ip_address}}
-    Private IP: {{ firewall.private_range | ipaddr('net') | ipaddr('2')}} 
-    Username: {{ cloudserver.results.username }}
-    Password: {{ cloudserver.results.password }}
+  VPN Information
+  ----------------------------------------
+  VPN IP Address: {{cloudserver_firewall.results.ip_address}}
+  Identifier: {{ identifier }}
+  Preshared Key: {{ psk }}
+{% endif %}
+{% if 'ids' %}
+  {{ cloudserver_ids.results.vm_description }} (VMID: {{ cloudserver_ids.results.instanceid }}) - {{ cloudserver.results.vm_image_display_name }}
+  ========================================
+  IP Address: {{cloudserver_ids.results.ip_address}}
+  Private IP: {{ firewall.private_range | ipaddr('net') | ipaddr('2')}} 
+  Username: {{ cloudserver_ids.results.username }}
+  Password: {{ cloudserver_ids.results.password }}
 
-    Snorby Login:
-    -------------------------------------------
-    http://{{ firewall.private_range | ipaddr('net') | ipaddr('1')}}:3000
-  {% endif %}
-{% endfor %}
+  Snorby Login:
+  -------------------------------------------
+  http://{{ firewall.private_range | ipaddr('net') | ipaddr('1')}}:3000
+{% endif %}
 {% set privateips = [3] %}
-{% for cloudserver in cloudservers.results %}
+{% for cloudserver in cloudserver_hosts.results %}
   {% if 'host' in cloudserver.results.vm_description %}
     {{ cloudserver.results.vm_description }} (VMID: {{ cloudserver.results.instanceid }}) - {{ cloudserver.results.vm_image_display_name }}
     ========================================

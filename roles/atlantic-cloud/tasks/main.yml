@@ -102,13 +102,12 @@
 - name: Waiting for host servers to come online...
   local_action:
     module: wait_for
-      host={{ item.0.results.ip_address }}
+      host={{ item.results.ip_address }}
       port=22
       delay=20
       timeout=300
-  with_nested:
-    - "{{cloudservers_hosts}}"
-    - results
+  with_items:
+    - "{{cloudserver_hosts.results}}"
 
 - name: Waiting for IDS server to come online...
   local_action:
