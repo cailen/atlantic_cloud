@@ -18,40 +18,40 @@
   with_items: "{{ builds }}"
   register: cloudserver_hosts
 
-# - name: "Atlantic_Net Cloud - Creating firewall"
-#   atlantic_cloud:
-#       state: present
-#       public_key: "{{ public_key }}"
-#       private_key: "{{ private_key }}"
-#       servername: "{{cu_id}}-{{datacenters[datacenter]}}-fw"
-#       vm_location: "{{ datacenter }}"
-#       imageid: "FreeBSD-10.1-pfsense_64bit"
-#       planname: "G2.2GB"
-#       ssh_key: "{{ ssh_key }}"
-#       enablebackup: 'Y'
-#   when: firewall
-#   register: cloudserver_ids
+- name: "Atlantic_Net Cloud - Creating firewall"
+  atlantic_cloud:
+      state: present
+      public_key: "{{ public_key }}"
+      private_key: "{{ private_key }}"
+      servername: "{{cu_id}}-{{datacenters[datacenter]}}-fw"
+      vm_location: "{{ datacenter }}"
+      imageid: "FreeBSD-10.1-pfsense_64bit"
+      planname: "G2.2GB"
+      ssh_key: "{{ ssh_key }}"
+      enablebackup: 'Y'
+  when: firewall
+  register: cloudserver_ids
 
-# - name: "Atlantic_Net Cloud - Creating IDS"
-#   atlantic_cloud:
-#       state: present
-#       public_key: "{{ public_key }}"
-#       private_key: "{{ private_key }}"
-#       servername: "{{cu_id}}-{{datacenters[datacenter]}}-ids"
-#       vm_location: "{{ datacenter }}"
-#       imageid: "CentOS-6.9_64bit"
-#       planname: "G2.2GB"
-#       ssh_key: "{{ ssh_key }}"
-#       enablebackup: 'Y'
-#   when: ids
-#   register: cloudserver_firewall
+- name: "Atlantic_Net Cloud - Creating IDS"
+  atlantic_cloud:
+      state: present
+      public_key: "{{ public_key }}"
+      private_key: "{{ private_key }}"
+      servername: "{{cu_id}}-{{datacenters[datacenter]}}-ids"
+      vm_location: "{{ datacenter }}"
+      imageid: "CentOS-6.9_64bit"
+      planname: "G2.2GB"
+      ssh_key: "{{ ssh_key }}"
+      enablebackup: 'Y'
+  when: ids
+  register: cloudserver_firewall
 
-- debug:
-    msg: item.results
-  with_items:
-    - "{{cloudserver_hosts.results}}"
-    # - "{{cloudserver_ids}}"
-    # - "{{cloudserver_firewall}}"
+# - debug:
+#     msg: item.results
+#   with_items:
+#     - "{{cloudserver_hosts.results}}"
+#     # - "{{cloudserver_ids}}"
+#     # - "{{cloudserver_firewall}}"
 
 - name: Adding the new host to the dynamic host file
   add_host:
