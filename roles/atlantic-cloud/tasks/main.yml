@@ -81,29 +81,28 @@
 - name: Adding the new host to the dynamic host file (IDS)
   add_host:
     name: "{{ item.results.ip_address }}"
-    groups: "cloud_{{item.build}}"
-  when: item.build == "firewall"
+    groups: "cloud_ids"
+  when: ids
   with_items:
-    - cloudservers.ids
+    - "{{cloudserver_ids}}"
 
 - name: Adding the new host to the dynamic host file (Firewall)
   add_host:
     name: "{{ item.results.ip_address }}"
     ansible_python_interpreter: /usr/local/bin/python2.7
     ansible_ssh_pass: "Nrprocks!"
-    groups: "cloud_{{item.build}}"
-  when: item.build == "firewall"
+    groups: "cloud_firewall"
+  when: firewall
   with_items:
-    - cloudservers.firewall
+    - "{{cloudserver_firewall}}"
 
 - set_fact:
-    gateway: "{{item.0.results.vm_ip_gateway}}"
-    cidr: "{{ '{{ item.0.results.vm_ip_address }}/{{ item.0.results.vm_ip_subnet }}' | ipaddr('prefix') }}"
-    fw_ip_address: "{{ item.0.results.vm_ip_address}}"
-  when: "'pfSense' in item.0.results.vm_description"
-  with_nested:
-    - "{{cloudservers.results}}"
-    - results
+    gateway: "{{item.results.vm_ip_gateway}}"
+    cidr: "{{ '{{ item.results.vm_ip_address }}/{{ item.results.vm_ip_subnet }}' | ipaddr('prefix') }}"
+    fw_ip_address: "{{ item.results.vm_ip_address}}"
+  when: firewall
+  with_items:
+    - "{{cloudserver_firewall}}"
 
 - name: Sending info to file
   template: src=templates/new_cloudservers.j2 dest=/etc/ansible/{{cu_id}}_new_order owner=root group=root mode=644
