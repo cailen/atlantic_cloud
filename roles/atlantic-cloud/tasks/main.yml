@@ -18,43 +18,43 @@
   with_items: "{{ builds }}"
   register: cloudserver_hosts
 
-- name: "Atlantic_Net Cloud - Creating firewall"
-  atlantic_cloud:
-      state: present
-      public_key: "{{ public_key }}"
-      private_key: "{{ private_key }}"
-      servername: "{{cu_id}}-{{datacenters[datacenter]}}-fw"
-      vm_location: "{{ datacenter }}"
-      imageid: "FreeBSD-10.1-pfsense_64bit"
-      planname: "G2.2GB"
-      ssh_key: "{{ ssh_key }}"
-      enablebackup: 'Y'
-  when: firewall
-  register: cloudserver_ids
+# - name: "Atlantic_Net Cloud - Creating firewall"
+#   atlantic_cloud:
+#       state: present
+#       public_key: "{{ public_key }}"
+#       private_key: "{{ private_key }}"
+#       servername: "{{cu_id}}-{{datacenters[datacenter]}}-fw"
+#       vm_location: "{{ datacenter }}"
+#       imageid: "FreeBSD-10.1-pfsense_64bit"
+#       planname: "G2.2GB"
+#       ssh_key: "{{ ssh_key }}"
+#       enablebackup: 'Y'
+#   when: firewall
+#   register: cloudserver_ids
 
-- name: "Atlantic_Net Cloud - Creating IDS"
-  atlantic_cloud:
-      state: present
-      public_key: "{{ public_key }}"
-      private_key: "{{ private_key }}"
-      servername: "{{cu_id}}-{{datacenters[datacenter]}}-ids"
-      vm_location: "{{ datacenter }}"
-      imageid: "CentOS-6.9_64bit"
-      planname: "G2.2GB"
-      ssh_key: "{{ ssh_key }}"
-      enablebackup: 'Y'
-  when: ids
-  register: cloudserver_firewall
+# - name: "Atlantic_Net Cloud - Creating IDS"
+#   atlantic_cloud:
+#       state: present
+#       public_key: "{{ public_key }}"
+#       private_key: "{{ private_key }}"
+#       servername: "{{cu_id}}-{{datacenters[datacenter]}}-ids"
+#       vm_location: "{{ datacenter }}"
+#       imageid: "CentOS-6.9_64bit"
+#       planname: "G2.2GB"
+#       ssh_key: "{{ ssh_key }}"
+#       enablebackup: 'Y'
+#   when: ids
+#   register: cloudserver_firewall
 
 - debug:
     msg: "{{item}}"
   with_items: 
     - "{{cloudserver_hosts}}"
-    - "{{cloudserver_ids}}"
-    - "{{cloudserver_firewall}}"
+    # - "{{cloudserver_ids}}"
+    # - "{{cloudserver_firewall}}"
 
 - debug:
-    msg: "{{item.0}}"
+    msg: "{{item.0.results}}"
   with_nested:
     - "{{cloudserver_hosts}}"
     - results
@@ -78,31 +78,31 @@
     - "{{cloudserver_hosts}}"
     - results
 
-- name: Adding the new host to the dynamic host file (IDS)
-  add_host:
-    name: "{{ item.results.ip_address }}"
-    groups: "cloud_ids"
-  when: ids
-  with_items:
-    - "{{cloudserver_ids}}"
+# - name: Adding the new host to the dynamic host file (IDS)
+#   add_host:
+#     name: "{{ item.results.ip_address }}"
+#     groups: "cloud_ids"
+#   when: ids
+#   with_items:
+#     - "{{cloudserver_ids}}"
 
-- name: Adding the new host to the dynamic host file (Firewall)
-  add_host:
-    name: "{{ item.results.ip_address }}"
-    ansible_python_interpreter: /usr/local/bin/python2.7
-    ansible_ssh_pass: "Nrprocks!"
-    groups: "cloud_firewall"
-  when: firewall
-  with_items:
-    - "{{cloudserver_firewall}}"
+# - name: Adding the new host to the dynamic host file (Firewall)
+#   add_host:
+#     name: "{{ item.results.ip_address }}"
+#     ansible_python_interpreter: /usr/local/bin/python2.7
+#     ansible_ssh_pass: "Nrprocks!"
+#     groups: "cloud_firewall"
+#   when: firewall
+#   with_items:
+#     - "{{cloudserver_firewall}}"
 
-- set_fact:
-    gateway: "{{item.results.vm_ip_gateway}}"
-    cidr: "{{ '{{ item.results.vm_ip_address }}/{{ item.results.vm_ip_subnet }}' | ipaddr('prefix') }}"
-    fw_ip_address: "{{ item.results.vm_ip_address}}"
-  when: firewall
-  with_items:
-    - "{{cloudserver_firewall}}"
+# - set_fact:
+#     gateway: "{{item.results.vm_ip_gateway}}"
+#     cidr: "{{ '{{ item.results.vm_ip_address }}/{{ item.results.vm_ip_subnet }}' | ipaddr('prefix') }}"
+#     fw_ip_address: "{{ item.results.vm_ip_address}}"
+#   when: firewall
+#   with_items:
+#     - "{{cloudserver_firewall}}"
 
 - name: Sending info to file
   template: src=templates/new_cloudservers.j2 dest=/etc/ansible/{{cu_id}}_new_order owner=root group=root mode=644
@@ -118,22 +118,22 @@
     - "{{cloudservers_hosts}}"
     - results
 
-- name: Waiting for IDS server to come online...
-  local_action:
-    module: wait_for
-      host={{ item.results.ip_address }}
-      port=22
-      delay=20
-      timeout=300
-  with_items:
-    - "{{cloudserver_ids}}"
+# - name: Waiting for IDS server to come online...
+#   local_action:
+#     module: wait_for
+#       host={{ item.results.ip_address }}
+#       port=22
+#       delay=20
+#       timeout=300
+#   with_items:
+#     - "{{cloudserver_ids}}"
 
-- name: Waiting for firewall server to come online...
-  local_action:
-    module: wait_for
-      host={{ item.results.ip_address }}
-      port=22
-      delay=20
-      timeout=300
-  with_items:
-    - "{{cloudserver_firewall}}"
+# - name: Waiting for firewall server to come online...
+#   local_action:
+#     module: wait_for
+#       host={{ item.results.ip_address }}
+#       port=22
+#       delay=20
+#       timeout=300
+#   with_items:
+#     - "{{cloudserver_firewall}}"
