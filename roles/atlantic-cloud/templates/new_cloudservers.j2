@@ -31,13 +31,11 @@ Here is the info for your new Atlantic.Net Cloud Servers:
 {% endif %}
 {% set privateips = [3] %}
 {% for cloudserver in cloudserver_hosts.results %}
-  {% if 'host' in cloudserver.results.vm_description %}
-    {{ cloudserver.results.vm_description }} (VMID: {{ cloudserver.results.instanceid }}) - {{ cloudserver.results.vm_image_display_name }}
-    ========================================
-    IP Address: {{cloudserver.results.ip_address}}
-    Private IP: {{ firewall.private_range | ipaddr('net') | ipaddr(privateips)}}
-    Username: {{ cloudserver.results.username }}
-    Password: {{ cloudserver.results.password }}
-  {% endif %}
+  {{ cloudserver_hosts.results.vm_description }} (VMID: {{ cloudserver_hosts.results.instanceid }}) - {{ cloudserver.results.vm_image_display_name }}
+  ========================================
+  IP Address: {{cloudserver_hosts.results.ip_address}}
+  Private IP: {{ firewall.private_range | ipaddr('net') | ipaddr(privateips)}}
+  Username: {{ cloudserver_hosts.results.username }}
+  Password: {{ cloudserver_hosts.results.password }}
   {% set privateips = privateips + 1 %}
 {% endfor %}
