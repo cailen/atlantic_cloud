@@ -56,7 +56,7 @@
 - debug:
     msg: "{{item}}"
   with_nested:
-    - "{{cloudservers_hosts}}"
+    - "{{cloudserver_hosts}}"
     - results
 
 - name: Adding the new host to the dynamic host file
