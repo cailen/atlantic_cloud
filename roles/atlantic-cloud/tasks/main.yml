@@ -127,6 +127,9 @@
   with_items:
     - "{{cloudserver_ids}}"
 
+- pause:
+    prompt: "Configure the firewall WAN, set the password, and enable SSH. Then continue."
+
 - name: Waiting for firewall server to come online...
   local_action:
     module: wait_for
