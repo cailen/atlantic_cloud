@@ -18,7 +18,7 @@ Here is the info for your new Atlantic.Net Cloud Servers:
   Preshared Key: {{ psk }}
 {% endif %}
 {% if 'ids' %}
-  {{ cloudserver_ids.results.vm_description }} (VMID: {{ cloudserver_ids.results.instanceid }}) - {{ cloudserver_firewall.results.vm_image_display_name }}
+  {{ cloudserver_ids.results.vm_description }} (VMID: {{ cloudserver_ids.results.instanceid }}) - {{ cloudserver_ids.results.vm_image_display_name }}
   ========================================
   IP Address: {{cloudserver_ids.results.ip_address}}
   Private IP: {{ private_range | ipaddr('net') | ipaddr('2')}} 
