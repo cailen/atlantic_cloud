@@ -54,10 +54,9 @@
     # - "{{cloudserver_firewall}}"
 
 - debug:
-    msg: "{{item.0.results}}"
-  with_nested:
+    msg: "{{item.results}}"
+  with_items:
     - "{{cloudserver_hosts}}"
-    - results
 
 - name: Adding the new host to the dynamic host file
   add_host:
