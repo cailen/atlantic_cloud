@@ -54,7 +54,7 @@
     # - "{{cloudserver_firewall}}"
 
 - debug:
-    msg: "{{item.results}}"
+    msg: "{{item.results.results}}"
   with_items:
     - "{{cloudserver_hosts}}"
 
