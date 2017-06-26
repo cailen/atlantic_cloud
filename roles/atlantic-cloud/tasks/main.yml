@@ -49,14 +49,9 @@
 - debug:
     msg: "{{item}}"
   with_items: 
-    - "{{cloudserver_hosts}}"
+    - cloudserver_hosts
     # - "{{cloudserver_ids}}"
     # - "{{cloudserver_firewall}}"
-
-- debug:
-    msg: "{{item.results.results}}"
-  with_items:
-    - "{{cloudserver_hosts}}"
 
 - name: Adding the new host to the dynamic host file
   add_host:
@@ -64,7 +59,7 @@
     groups: "cloud_{{item.0.item.build}}"
     when: (item.0.results.vm_image != "firewall") and (item.0.results.vm_image != "ubuntu-16.04_64bit") 
   with_nested:
-    - "{{cloudserver_hosts}}"
+    - cloudserver_hosts
     - results
 
 - name: Adding the new host to the dynamic host file (Ubuntu 16)
