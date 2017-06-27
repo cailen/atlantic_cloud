@@ -1,6 +1,6 @@
 ---
 - debug:
-    msg: "{{item}}"
+    msg: "{{ backup_options[item.backups | default('N')]}}"
   with_items: 
     - "{{builds}}"
 
@@ -14,7 +14,7 @@
       imageid: "{{ item.imageid }}"
       planname: "{{ item.planname }}"
       ssh_key: "{{ ssh_key }}"
-      enablebackup: '{{ backup_options[item.backups | default("N")]}}'
+      enablebackup: "{{ backup_options[item.backups | default('N')]}}"
   with_items: "{{ builds }}"
   register: cloudserver_hosts
 
@@ -46,18 +46,11 @@
   when: ids
   register: cloudserver_ids
 
-# - debug:
-#     msg: item.results
-#   with_items:
-#     - "{{cloudserver_hosts.results}}"
-#     # - "{{cloudserver_ids}}"
-#     # - "{{cloudserver_firewall}}"
-
 - name: Adding the new host to the dynamic host file
   add_host:
     name: "{{ item.results.ip_address }}"
     groups: "cloud_{{item.item.build}}"
-    when: (item.results.vm_image != "firewall") and (item.results.vm_image != "ubuntu-16.04_64bit") 
+  when: (item.results.vm_image != "firewall") and (item.results.vm_image != "ubuntu-16.04_64bit")
   with_items:
     - "{{cloudserver_hosts.results}}"
 
@@ -88,7 +81,8 @@
   with_items:
     - "{{cloudserver_firewall}}"
 
-
+# Get the netmask for the firewall. This needs to be done before the other
+# facts are set so the cidr variable can have this available to it.
 - set_fact:
     firewall_net_mask: "{{ item.results.vm_ip_address }}/{{ item.results.vm_ip_subnet }}"
   when: firewall
@@ -97,7 +91,6 @@
 
 - set_fact:
     gateway: "{{item.results.vm_ip_gateway}}"
-    # firewall_net_mask: "{{ item.results.vm_ip_address }}/{{ item.results.vm_ip_subnet }}"
     cidr: "{{ firewall_net_mask | ipaddr('prefix') }}"
     fw_ip_address: "{{ item.results.vm_ip_address}}"
   when: firewall
