@@ -49,8 +49,8 @@
 - name: Adding the new host to the dynamic host file
   add_host:
     name: "{{ item.results.ip_address }}"
-    groups: "cloud_{{item.item.build}}"
-  when: (item.results.vm_image != "firewall") and (item.results.vm_image != "ubuntu-16.04_64bit")
+    groups: "cloud_hosts"
+  when: item.results.vm_image != "ubuntu-16.04_64bit"
   with_items:
     - "{{cloudserver_hosts.results}}"
 
@@ -58,7 +58,7 @@
   add_host:
     name: "{{ item.results.ip_address }}"
     ansible_python_interpreter: /usr/bin/python3
-    groups: "cloud_{{item.item.build}}"
+    groups: "cloudserver_hosts"
   when: item.results.vm_image == "ubuntu-16.04_64bit"
   with_items:
     - "{{cloudserver_hosts.results}}"
@@ -66,7 +66,7 @@
 - name: Adding the new host to the dynamic host file (IDS)
   add_host:
     name: "{{ item.results.ip_address }}"
-    groups: "cloud_ids"
+    groups: "cloudserver_ids"
   when: ids
   with_items:
     - "{{cloudserver_ids}}"
@@ -75,8 +75,8 @@
   add_host:
     name: "{{ item.results.ip_address }}"
     ansible_python_interpreter: /usr/local/bin/python2.7
-    ansible_ssh_pass: "Nrprocks!"
-    groups: "cloud_firewall"
+    ansible_ssh_pass: "pfsense"
+    groups: "cloudserver_firewall"
   when: firewall
   with_items:
     - "{{cloudserver_firewall}}"
@@ -121,7 +121,7 @@
     - "{{cloudserver_ids}}"
 
 - pause:
-    prompt: "Configure the firewall WAN, set the password, and enable SSH. Then continue."
+    prompt: "Configure the firewall WAN, set the WAN IP, and enable SSH. Then press enter to continue."
 
 - name: Waiting for firewall server to come online...
   local_action:

@@ -7,20 +7,24 @@
     - private_key: 66f002a2b6c5d742a9ce6d6e4de333534c73b128
     - ssh_key: "ansible"
     - builds:
-        - build: host01
-          imageid: ubuntu-16.04_64bit
-          planname: "G2.2GB"
-          trendmicro: yes
-          backups: cloud
+        - build: 
+            name: host01
+            imageid: ubuntu-16.04_64bit
+            planname: "G2.2GB"
+            trendmicro: yes
+            backups: cloud
+        - build: 
+            name: host02
+            imageid: CentOS-7.3_64bit
+            planname: "G2.4GB"
+            trendmicro: yes
+            backups: cloud
     - firewall: yes
-      private_range: 10.83.61.0/25
-      vpn_range: 10.83.61.128/25
-      psk: 6psnGMs-7!@RZ3sgr_6hcE9ReuSgarZt4z?UEX%*hK26_A_5-t-s4a6=
-      identifier: DerekDesigns
+        private_range: 10.83.61.0/25
+        vpn_range: 10.83.61.128/25
+        psk: 6psnGMs-7!@RZ3sgr_6hcE9ReuSgarZt4z?UEX%*hK26_A_5-t-s4a6=
+        identifier: DerekDesigns
     - ids: yes
-        # - build: ids
-        #   imageid: CentOS-7.3_64bit
-        #   planname: "G2.2GB"
 
   roles:
     - atlantic-cloud
