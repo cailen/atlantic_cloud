@@ -1,0 +1,3 @@
+---
+wan_interface: vtnet0
+lan_interface: vtnet1

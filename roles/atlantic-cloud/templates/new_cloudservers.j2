@@ -1,6 +1,6 @@
 Here is the info for your new Atlantic.Net Cloud Servers:
-
 {% if 'firewall' %}
+
   {{ cloudserver_firewall.results.vm_description }} (VMID: {{ cloudserver_firewall.results.instanceid }}) - {{ cloudserver_firewall.results.vm_image_display_name }}
   ========================================
   IP Address: {{cloudserver_firewall.results.ip_address}}/{{cidr}}
@@ -16,9 +16,10 @@ Here is the info for your new Atlantic.Net Cloud Servers:
   VPN IP Address: {{cloudserver_firewall.results.ip_address}}
   Identifier: {{ identifier }}
   Preshared Key: {{ psk }}
-{% endif %}
 
+{% endif %}
 {% if 'ids' %}
+
   {{ cloudserver_ids.results.vm_description }} (VMID: {{ cloudserver_ids.results.instanceid }}) - {{ cloudserver_ids.results.vm_image_display_name }}
   ========================================
   IP Address: {{cloudserver_ids.results.ip_address}}
@@ -29,8 +30,8 @@ Here is the info for your new Atlantic.Net Cloud Servers:
   Snorby Login:
   -------------------------------------------
   http://{{ private_range | ipaddr('net') | ipaddr('1') | ipaddr('address')}}:3000
-{% endif %}
 
+{% endif %}
 {% set privateips = 3 %}
 {% for cloudserver in cloudserver_hosts.results %}
   {{ cloudserver.results.vm_description }} (VMID: {{ cloudserver.results.instanceid }}) - {{ cloudserver.results.vm_image_display_name }}
@@ -39,6 +40,6 @@ Here is the info for your new Atlantic.Net Cloud Servers:
   Private IP: {{ private_range | ipaddr('net') | ipaddr(privateips)}}
   Username: {{ cloudserver.results.username }}
   Password: {{ cloudserver.results.password }}
-  
+
   {% set privateips = privateips + 1 %}
 {% endfor %}

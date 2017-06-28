@@ -1,14 +1,4 @@
 ---
-# - debug:
-#     msg: "{{ backup_options[item.backups | default('N')]}}"
-#   with_items: 
-#     - "{{builds}}"
-
-- debug:
-    msg: "{{item}}"
-  with_items: 
-    - "{{builds}}"
-
 - name: "Atlantic_Net Cloud - Creating hosts"
   atlantic_cloud:
       state: present
