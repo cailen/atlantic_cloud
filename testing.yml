@@ -19,7 +19,8 @@
             planname: "G2.4GB"
             trendmicro: yes
             backups: cloud
-    - firewall: yes
+    - firewall:
+        firewall: yes
         private_range: 10.83.61.0/25
         vpn_range: 10.83.61.128/25
         psk: 6psnGMs-7!@RZ3sgr_6hcE9ReuSgarZt4z?UEX%*hK26_A_5-t-s4a6=
