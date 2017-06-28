@@ -28,7 +28,7 @@ Here is the info for your new Atlantic.Net Cloud Servers:
 
   Snorby Login:
   -------------------------------------------
-  http://{{ private_range | ipaddr('net') | ipaddr('1')}}:3000
+  http://{{ private_range | ipaddr('address') | ipaddr('1')}}:3000
 {% endif %}
 
 {% set privateips = 3 %}
