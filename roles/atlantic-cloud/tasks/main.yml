@@ -1,8 +1,8 @@
 ---
-- debug:
-    msg: "{{ backup_options[item.backups | default('N')]}}"
-  with_items: 
-    - "{{builds}}"
+# - debug:
+#     msg: "{{ backup_options[item.backups | default('N')]}}"
+#   with_items: 
+#     - "{{builds}}"
 
 - debug:
     msg: "{{item}}"
