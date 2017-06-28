@@ -14,12 +14,12 @@
       state: present
       public_key: "{{ public_key }}"
       private_key: "{{ private_key }}"
-      servername: "{{cu_id}}-{{datacenters[datacenter]}}-{{item.build}}"
+      servername: "{{cu_id}}-{{datacenters[datacenter]}}-{{item.build.name}}"
       vm_location: "{{ datacenter }}"
-      imageid: "{{ item.imageid }}"
-      planname: "{{ item.planname }}"
+      imageid: "{{ item.build.imageid }}"
+      planname: "{{ item.build.planname }}"
       ssh_key: "{{ ssh_key }}"
-      enablebackup: "{{ backup_options[item.backups | default('N')]}}"
+      enablebackup: "{{ backup_options[item.build.backups | default('N')]}}"
   with_items: "{{ builds }}"
   register: cloudserver_hosts
 
