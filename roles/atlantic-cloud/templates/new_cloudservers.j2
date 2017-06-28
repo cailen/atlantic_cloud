@@ -39,5 +39,6 @@ Here is the info for your new Atlantic.Net Cloud Servers:
   Private IP: {{ private_range | ipaddr('net') | ipaddr(privateips)}}
   Username: {{ cloudserver.results.username }}
   Password: {{ cloudserver.results.password }}
+  
   {% set privateips = privateips + 1 %}
 {% endfor %}
