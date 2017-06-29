@@ -63,6 +63,7 @@
     gateway: "{{item.results.vm_ip_gateway}}"
     cidr: "{{ firewall_net_mask | ipaddr('prefix') }}"
     fw_ip_address: "{{ item.results.vm_ip_address}}"
+    private_range: "{{ private_range }}"
   when: firewall
   with_items:
     - "{{cloudserver_firewall}}"
