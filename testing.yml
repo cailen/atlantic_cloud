@@ -63,3 +63,4 @@
       private: yes
       encrypt: "bcrypt"
       confirm: yes
+  roles: atlantic-firewall

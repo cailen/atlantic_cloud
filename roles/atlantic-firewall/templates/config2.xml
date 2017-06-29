@@ -10,7 +10,7 @@
 		<group>
 			<name>all</name>
 			<description><![CDATA[All Users]]></description>
-			<scope>system</scope>
+			<scope>system</scope>cert
 			<gid>1998</gid>
 			<member>0</member>
 		</group>
