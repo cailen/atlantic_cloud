@@ -29,7 +29,7 @@
   roles:
     - atlantic-cloud
   
-- hosts: derek-host
+- hosts: cloudserver_hosts
   vars:
   pre_tasks:
     - name: Install aptitude (Debian and Ubuntu)
@@ -63,4 +63,3 @@
       private: yes
       encrypt: "bcrypt"
       confirm: yes
-

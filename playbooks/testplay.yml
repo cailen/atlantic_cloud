@@ -14,6 +14,7 @@
     # CentOS-7.2-cPanel_64bit, CentOS-7.3_64bit
     # debian-7.11.0_32bit, debian-7.11.0_64bit
     # debian-8.8.0_32bit, debian-8.8.0_64bit
+    # debian-9.0.0_32bit, debian-9.0.0_64bit
     # Fedora-24_64bit, Fedora-25_64bit
     # FreeBSD-10.3_64bit, FreeBSD-11.0_64bit
     # ubuntu-14.04_32bit, ubuntu-14.04_64bit

@@ -44,7 +44,7 @@
 - name: Adding the new host to the dynamic host file
   add_host:
     name: "{{ item.results.ip_address }}"
-    groups: "cloud_hosts"
+    groups: "cloudserver_hosts"
   when: item.results.vm_image != "ubuntu-16.04_64bit"
   with_items:
     - "{{cloudserver_hosts.results}}"
