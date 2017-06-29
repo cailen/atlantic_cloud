@@ -6,11 +6,11 @@
 - name: Upgrade pfSense
   raw: /etc/rc.firmware pfSenseupgrade /root/latest.tgz
 - name: Wait for reboot
-  wait_for:
-    host: "{{ ansible_host|default(ansible_ssh_host|default(inventory_hostname)) }}"
-    port: 22
-    delay: 60
-  connection: local
+  local_action:
+    wait_for:
+      host: "{{ ansible_host|default(ansible_ssh_host|default(inventory_hostname)) }}"
+      port: 22
+      delay: 60
 - name: Install packages
   pkgng:
     name: net-snmp,xmlstarlet,sudo,nano,rsync,php56-openssl
