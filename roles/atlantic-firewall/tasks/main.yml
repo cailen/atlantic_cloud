@@ -10,7 +10,7 @@
     host: "{{ ansible_host|default(ansible_ssh_host|default(inventory_hostname)) }}"
     port: 22
     delay: 60
-    connection: local
+  connection: local
 - name: Install packages
   pkgng:
     name: net-snmp,xmlstarlet,sudo,nano,rsync,php56-openssl
