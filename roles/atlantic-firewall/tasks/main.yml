@@ -21,9 +21,6 @@
   template:
     src: templates/snmpd.conf.j2
     dest: /usr/local/share/snmp/snmpd.conf
-- name: 
-  copy:
-    src
 - name: Copy config.xml over (cross fingers)
   template:
     src: templates/config.xml.j2
