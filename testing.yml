@@ -28,6 +28,16 @@
 
   roles:
     - atlantic-cloud
+
+- hosts: cloudserver_firewall
+  vars_prompt:
+    - name: "adminpassword"
+      prompt: "Administrator password please"
+      private: yes
+      encrypt: "bcrypt"
+      confirm: yes
+  roles: 
+    - atlantic-firewall
   
 - hosts: cloudserver_hosts
   vars:
@@ -55,13 +65,3 @@
   roles:
     - atlantic.iptables
     - atlantic.snmp 
-
-- hosts: cloudserver_firewall
-  vars_prompt:
-    - name: "adminpassword"
-      prompt: "Administrator password please"
-      private: yes
-      encrypt: "bcrypt"
-      confirm: yes
-  roles: 
-    - atlantic-firewall
