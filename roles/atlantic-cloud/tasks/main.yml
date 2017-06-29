@@ -1,129 +1,129 @@
 ---
-  - name: "Atlantic_Net Cloud - Creating hosts"
-    atlantic_cloud:
-        state: present
-        public_key: "{{ public_key }}"
-        private_key: "{{ private_key }}"
-        servername: "{{cu_id}}-{{datacenters[datacenter]}}-{{item.build.name}}"
-        vm_location: "{{ datacenter }}"
-        imageid: "{{ item.build.imageid }}"
-        planname: "{{ item.build.planname }}"
-        ssh_key: "{{ ssh_key }}"
-        enablebackup: "{{ backup_options[item.build.backups | default('N')]}}"
-    with_items: "{{ builds }}"
-    register: cloudserver_hosts
+- name: "Atlantic_Net Cloud - Creating hosts"
+  atlantic_cloud:
+      state: present
+      public_key: "{{ public_key }}"
+      private_key: "{{ private_key }}"
+      servername: "{{cu_id}}-{{datacenters[datacenter]}}-{{item.build.name}}"
+      vm_location: "{{ datacenter }}"
+      imageid: "{{ item.build.imageid }}"
+      planname: "{{ item.build.planname }}"
+      ssh_key: "{{ ssh_key }}"
+      enablebackup: "{{ backup_options[item.build.backups | default('N')]}}"
+  with_items: "{{ builds }}"
+  register: cloudserver_hosts
 
-  - name: "Atlantic_Net Cloud - Creating firewall"
-    atlantic_cloud:
-        state: present
-        public_key: "{{ public_key }}"
-        private_key: "{{ private_key }}"
-        servername: "{{cu_id}}-{{datacenters[datacenter]}}-fw"
-        vm_location: "{{ datacenter }}"
-        imageid: "FreeBSD-10.1-pfsense_64bit"
-        planname: "G2.2GB"
-        ssh_key: "{{ ssh_key }}"
-        enablebackup: 'Y'
-    when: firewall
-    register: cloudserver_firewall
+- name: "Atlantic_Net Cloud - Creating firewall"
+  atlantic_cloud:
+      state: present
+      public_key: "{{ public_key }}"
+      private_key: "{{ private_key }}"
+      servername: "{{cu_id}}-{{datacenters[datacenter]}}-fw"
+      vm_location: "{{ datacenter }}"
+      imageid: "FreeBSD-10.1-pfsense_64bit"
+      planname: "G2.2GB"
+      ssh_key: "{{ ssh_key }}"
+      enablebackup: 'Y'
+  when: firewall
+  register: cloudserver_firewall
 
-  - name: "Atlantic_Net Cloud - Creating IDS"
-    atlantic_cloud:
-        state: present
-        public_key: "{{ public_key }}"
-        private_key: "{{ private_key }}"
-        servername: "{{cu_id}}-{{datacenters[datacenter]}}-ids"
-        vm_location: "{{ datacenter }}"
-        imageid: "CentOS-6.9_64bit"
-        planname: "G2.2GB"
-        ssh_key: "{{ ssh_key }}"
-        enablebackup: 'Y'
-    when: ids
-    register: cloudserver_ids
+- name: "Atlantic_Net Cloud - Creating IDS"
+  atlantic_cloud:
+      state: present
+      public_key: "{{ public_key }}"
+      private_key: "{{ private_key }}"
+      servername: "{{cu_id}}-{{datacenters[datacenter]}}-ids"
+      vm_location: "{{ datacenter }}"
+      imageid: "CentOS-6.9_64bit"
+      planname: "G2.2GB"
+      ssh_key: "{{ ssh_key }}"
+      enablebackup: 'Y'
+  when: ids
+  register: cloudserver_ids
 
-  - name: Adding the new host to the dynamic host file
-    add_host:
-      name: "{{ item.results.ip_address }}"
-      groups: "cloudserver_hosts"
-    when: item.results.vm_image != "ubuntu-16.04_64bit"
-    with_items:
-      - "{{cloudserver_hosts.results}}"
+- name: Adding the new host to the dynamic host file
+  add_host:
+    name: "{{ item.results.ip_address }}"
+    groups: "cloudserver_hosts"
+  when: item.results.vm_image != "ubuntu-16.04_64bit"
+  with_items:
+    - "{{cloudserver_hosts.results}}"
 
-  - name: Adding the new host to the dynamic host file (Ubuntu 16)
-    add_host:
-      name: "{{ item.results.ip_address }}"
-      ansible_python_interpreter: /usr/bin/python3
-      groups: "cloudserver_hosts"
-    when: item.results.vm_image == "ubuntu-16.04_64bit"
-    with_items:
-      - "{{cloudserver_hosts.results}}"
+- name: Adding the new host to the dynamic host file (Ubuntu 16)
+  add_host:
+    name: "{{ item.results.ip_address }}"
+    ansible_python_interpreter: /usr/bin/python3
+    groups: "cloudserver_hosts"
+  when: item.results.vm_image == "ubuntu-16.04_64bit"
+  with_items:
+    - "{{cloudserver_hosts.results}}"
 
-  - name: Adding the new host to the dynamic host file (IDS)
-    add_host:
-      name: "{{ item.results.ip_address }}"
-      groups: "cloudserver_ids"
-    when: ids
-    with_items:
-      - "{{cloudserver_ids}}"
+- name: Adding the new host to the dynamic host file (IDS)
+  add_host:
+    name: "{{ item.results.ip_address }}"
+    groups: "cloudserver_ids"
+  when: ids
+  with_items:
+    - "{{cloudserver_ids}}"
 
-  - name: Adding the new host to the dynamic host file (Firewall)
-    add_host:
-      name: "{{ item.results.ip_address }}"
-      ansible_python_interpreter: /usr/local/bin/python2.7
-      ansible_ssh_pass: "pfsense"
-      groups: "cloudserver_firewall"
-    when: firewall
-    with_items:
-      - "{{cloudserver_firewall}}"
+- name: Adding the new host to the dynamic host file (Firewall)
+  add_host:
+    name: "{{ item.results.ip_address }}"
+    ansible_python_interpreter: /usr/local/bin/python2.7
+    ansible_ssh_pass: "pfsense"
+    groups: "cloudserver_firewall"
+  when: firewall
+  with_items:
+    - "{{cloudserver_firewall}}"
 
-  # Get the netmask for the firewall. This needs to be done before the other
-  # facts are set so the cidr variable can have this available to it.
-  - set_fact:
-      firewall_net_mask: "{{ item.results.vm_ip_address }}/{{ item.results.vm_ip_subnet }}"
-    when: firewall
-    with_items:
-      - "{{cloudserver_firewall}}"
+# Get the netmask for the firewall. This needs to be done before the other
+# facts are set so the cidr variable can have this available to it.
+- set_fact:
+    firewall_net_mask: "{{ item.results.vm_ip_address }}/{{ item.results.vm_ip_subnet }}"
+  when: firewall
+  with_items:
+    - "{{cloudserver_firewall}}"
 
-  - set_fact:
-      gateway: "{{item.results.vm_ip_gateway}}"
-      cidr: "{{ firewall_net_mask | ipaddr('prefix') }}"
-      fw_ip_address: "{{ item.results.vm_ip_address}}"
-    when: firewall
-    with_items:
-      - "{{cloudserver_firewall}}"
+- set_fact:
+    gateway: "{{item.results.vm_ip_gateway}}"
+    cidr: "{{ firewall_net_mask | ipaddr('prefix') }}"
+    fw_ip_address: "{{ item.results.vm_ip_address}}"
+  when: firewall
+  with_items:
+    - "{{cloudserver_firewall}}"
 
-  - name: Sending info to file
-    template: src=templates/new_cloudservers.j2 dest=/etc/ansible/{{cu_id}}_new_order owner=root group=root mode=644
+- name: Sending info to file
+  template: src=templates/new_cloudservers.j2 dest=/etc/ansible/{{cu_id}}_new_order owner=root group=root mode=644
 
-  - name: Waiting for host servers to come online...
-    local_action:
-      module: wait_for
-        host={{ item.results.ip_address }}
-        port=22
-        delay=5
-        timeout=300
-    with_items:
-      - "{{cloudserver_hosts.results}}"
+- name: Waiting for host servers to come online...
+  local_action:
+    module: wait_for
+      host={{ item.results.ip_address }}
+      port=22
+      delay=5
+      timeout=300
+  with_items:
+    - "{{cloudserver_hosts.results}}"
 
-  - name: Waiting for IDS server to come online...
-    local_action:
-      module: wait_for
-        host={{ item.results.ip_address }}
-        port=22
-        delay=5
-        timeout=300
-    with_items:
-      - "{{cloudserver_ids}}"
+- name: Waiting for IDS server to come online...
+  local_action:
+    module: wait_for
+      host={{ item.results.ip_address }}
+      port=22
+      delay=5
+      timeout=300
+  with_items:
+    - "{{cloudserver_ids}}"
 
-  - pause:
-      prompt: "Configure the firewall WAN, set the WAN IP, and enable SSH. Then press enter to continue."
+- pause:
+    prompt: "Configure the firewall WAN, set the WAN IP, and enable SSH. Then press enter to continue."
 
-  - name: Waiting for firewall server to come online...
-    local_action:
-      module: wait_for
-        host={{ item.results.ip_address }}
-        port=22
-        delay=5
-        timeout=300
-    with_items:
-      - "{{cloudserver_firewall}}"
+- name: Waiting for firewall server to come online...
+  local_action:
+    module: wait_for
+      host={{ item.results.ip_address }}
+      port=22
+      delay=5
+      timeout=300
+  with_items:
+    - "{{cloudserver_firewall}}"
