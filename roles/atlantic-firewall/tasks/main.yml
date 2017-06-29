@@ -1,6 +1,6 @@
 --- 
 - name: Add Ansible control IP to the rules
-  raw: easyrule pass wan tcp 104.245.39.134 {{ wan_ip }} 22
+  raw: easyrule pass wan tcp 104.245.39.134 {{ ansible_host }} 22
 - name: Fetch the latest version
   raw: fetch https://updates.pfsense.org/_updaters/amd64/latest.tgz
 - name: Upgrade pfSense
