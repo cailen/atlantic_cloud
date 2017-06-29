@@ -1,18 +1,4 @@
 ---
-- name: "Atlantic_Net Cloud - Creating hosts"
-  atlantic_cloud:
-      state: present
-      public_key: "{{ public_key }}"
-      private_key: "{{ private_key }}"
-      servername: "{{cu_id}}-{{datacenters[datacenter]}}-{{item.build.name}}"
-      vm_location: "{{ datacenter }}"
-      imageid: "{{ item.build.imageid }}"
-      planname: "{{ item.build.planname }}"
-      ssh_key: "{{ ssh_key }}"
-      enablebackup: "{{ backup_options[item.build.backups | default('N')]}}"
-  with_items: "{{ builds }}"
-  register: cloudserver_hosts
-
 - name: "Atlantic_Net Cloud - Creating firewall"
   atlantic_cloud:
       state: present
@@ -41,30 +27,19 @@
   when: ids
   register: cloudserver_ids
 
-- name: Adding the new host to the dynamic host file
-  add_host:
-    name: "{{ item.results.ip_address }}"
-    groups: "cloudserver_hosts"
-  when: item.results.vm_image != "ubuntu-16.04_64bit"
-  with_items:
-    - "{{cloudserver_hosts.results}}"
-
-- name: Adding the new host to the dynamic host file (Ubuntu 16)
-  add_host:
-    name: "{{ item.results.ip_address }}"
-    ansible_python_interpreter: /usr/bin/python3
-    groups: "cloudserver_hosts"
-  when: item.results.vm_image == "ubuntu-16.04_64bit"
-  with_items:
-    - "{{cloudserver_hosts.results}}"
-
-- name: Adding the new host to the dynamic host file (IDS)
-  add_host:
-    name: "{{ item.results.ip_address }}"
-    groups: "cloudserver_ids"
-  when: ids
-  with_items:
-    - "{{cloudserver_ids}}"
+- name: "Atlantic_Net Cloud - Creating hosts"
+  atlantic_cloud:
+      state: present
+      public_key: "{{ public_key }}"
+      private_key: "{{ private_key }}"
+      servername: "{{cu_id}}-{{datacenters[datacenter]}}-{{item.build.name}}"
+      vm_location: "{{ datacenter }}"
+      imageid: "{{ item.build.imageid }}"
+      planname: "{{ item.build.planname }}"
+      ssh_key: "{{ ssh_key }}"
+      enablebackup: "{{ backup_options[item.build.backups | default('N')]}}"
+  with_items: "{{ builds }}"
+  register: cloudserver_hosts
 
 - name: Adding the new host to the dynamic host file (Firewall)
   add_host:
@@ -91,6 +66,31 @@
   when: firewall
   with_items:
     - "{{cloudserver_firewall}}"
+
+- name: Adding the new host to the dynamic host file (IDS)
+  add_host:
+    name: "{{ item.results.ip_address }}"
+    groups: "cloudserver_ids"
+  when: ids
+  with_items:
+    - "{{cloudserver_ids}}"
+
+- name: Adding the new host to the dynamic host file
+  add_host:
+    name: "{{ item.results.ip_address }}"
+    groups: "cloudserver_hosts"
+  when: item.results.vm_image != "ubuntu-16.04_64bit"
+  with_items:
+    - "{{cloudserver_hosts.results}}"
+
+- name: Adding the new host to the dynamic host file (Ubuntu 16)
+  add_host:
+    name: "{{ item.results.ip_address }}"
+    ansible_python_interpreter: /usr/bin/python3
+    groups: "cloudserver_hosts"
+  when: item.results.vm_image == "ubuntu-16.04_64bit"
+  with_items:
+    - "{{cloudserver_hosts.results}}"
 
 - name: Sending info to file
   template: src=templates/new_cloudservers.j2 dest=/etc/ansible/{{cu_id}}_new_order owner=root group=root mode=644
