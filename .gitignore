@@ -6,3 +6,6 @@
 /env
 /env/Lib
 /env/Scripts
+/.vs/ProjectSettings.json
+/.vs/slnx.sqlite
+*.sqlite

@@ -53,53 +53,37 @@ options:
   vm_location:
     description:
      - This is the slug of the region you would like your server to be created in.
+    default: 'USEAST1'
+    choices: ['USEAST1', 'USEAST2', 'USCENTRAL1', 'USWEST1', 'CAEAST1', 'EUWEST1']
   enablebackup:
     description:
-     - Optional, Boolean, enables backups for your cloudserver.
-    version_added: "1.6"
-    default: "no"
-    choices: [ "yes", "no" ]
+     - Optional, enables backups for your cloudserver.
+    default: "N"
+    choices: [ "Y", "N" ]
   wait:
     description:
      - Wait for the cloudserver to be in state 'running' before returning.  If wait is "no" an ip_address may not be returned.
     default: "yes"
     choices: [ "yes", "no" ]
   wait_timeout:
-    description:
-     - How long before wait gives up, in seconds.
+    description:     - How long before wait gives up, in seconds.
     default: 300
   ssh_key:
     description:
      - The name of the public SSH key you want to add to your account.
+  reboottype:
+    description:
+     - The type of reboot: soft or hard. (Suggestion is to hard reboot)
+    default: "hard"
+    choices: [ "hard", "soft"]
 
-notes:
-  - none  
-requirements:
-  - "python >= 2.6"
-  - anetpy
-'''
-
-
-EXAMPLES = '''
-# Ensure a SSH key is present
-# If a key matches this name, will return the ssh key id and changed = False
-# If no existing key matches this name, a new key is created, the ssh key id is returned and changed = False
-
-- atlantic_cloud:
-    state: present
-    command: ssh
-    name: my_ssh_key
-    key_id: 'ssh-rsa AAAA...'
-    public_key: XXX
-    private_key: XXX
+EXAMPLES
 
 # Create a new cloudserver
 # Will return the cloudserver details including the cloudserver id (used for idempotence)
-
 - atlantic_cloud:
     state: present
-    command: cloudserver
-    name: mycloudserver
+    servername: mycloudserver
     public_key: XXX
     private_key: XXX
     planname: G2.2GB
@@ -108,36 +92,27 @@ EXAMPLES = '''
     wait_timeout: 500
   register: my_cloudserver
 
-- debug:
-    msg: "ID is {{ my_cloudserver.cloudserver.id }}"
-
-- debug:
-    msg: "IP is {{ my_cloudserver.cloudserver.ip_address }}"
+- name: Server ID
+  debug:
+    msg: "ID is {{ my_cloudserver.results.instanceid }}"
+- name: Server IP
+  debug:
+    msg: "IP is {{ my_cloudserver.results.vm_ip_address }}"
 
 # Ensure a cloudserver is present
 # If cloudserver id already exist, will return the cloudserver details and changed = False
-# If no cloudserver matches the id, a new cloudserver will be created and the cloudserver details (including the new id) are returned, changed = True.
-
 - atlantic_cloud:
     state: present
-    command: cloudserver
-    instanceid: 123
-    servername: mycloudserver
+    instanceid: 123456
     public_key: XXX
     private_key: XXX
-    planname: G2.2GB
-    vm_location: USEAST2
-    imageid: ubuntu-14.04_64bit
     wait_timeout: 500
-
 # Create a cloudserver with ssh key
-# The ssh key id can be passed as argument at the creation of a cloudserver (see ssh_key_ids).
-# Several keys can be added to ssh_key_ids as id1,id2,id3
-# The keys are used to connect as root to the cloudserver.
-
+# The ssh key id can be passed as argument at the creation of a cloudserver (see ssh_key).
+# The key is used to connect as root to the cloudserver.
 - atlantic_cloud:
     state: present
-    key_id: XXX
+    ssh_key: XXX
     servername: mycloudserver
     public_key: XXX
     private_key: XXX
@@ -198,6 +173,13 @@ class Cloudserver(JsonfyMixIn):
             json = self.manager.show_cloudserver(self.instanceid)
             if json['item']['vm_status']:
                 self.update_attr(json)
+    
+    def unique_name(cloudservers, servername):
+        s = set()
+        for cloudserver in cloudservers:
+            if (cloudserver.servername).lower() in s: return False
+            s.add(cloudserver.servername)
+        return True
 
     def power_on(self):
         assert self.vm_status == 'STOPPED'  # Can only power on a stopped one.
@@ -238,11 +220,19 @@ class Cloudserver(JsonfyMixIn):
             return cls(dict((x.lower(), y) for x, y in v.iteritems()))
 
     @classmethod
-    def find(cls, instanceid):
+    def find(cls, instanceid=None, servername=None):
         cloudservers = cls.list_all()
-        for cloudserver in cloudservers:
-            if cloudserver.instanceid == str(instanceid):
-               return cloudserver
+        if instanceid:
+            for cloudserver in cloudservers:
+                if cloudserver.instanceid == str(instanceid):
+                    return cloudserver
+        if servername:
+            s = set()
+            for cloudserver in cloudservers:
+                if str(cloudserver.servername).lower() == str(servername).lower():
+                    if (cloudserver.servername).lower() in s: return False
+                    s.add(cloudserver.servername)
+                return cloudserver
         return False
 
     @classmethod
@@ -315,9 +305,20 @@ def core(module):
                 else:
                     changed = False
                     msg = "Server details"
-
+        elif module.params['servername']:
+            cloudserver = Cloudserver.find(servername=module.params['servername'])
+            if cloudserver:
+                # Reboot selected server
+                if module.params['reboottype']:
+                    results = cloudserver.reboot(instanceid=module.params['instanceid'], reboottype=module.params['reboottype'])
+                    msg = "Server has been rebooted"
+                    changed =  True
+                else:
+                    changed = False
+                    msg = "Server details"
+                                        
         # Create a new server if you've made it this far
-        if module.params['servername'] and not module.params['instanceid']:
+        elif module.params['servername'] and not module.params['instanceid']:
             if module.params['ssh_key']:
                 SSH.setup(public_key, private_key)
                 ssh_key = SSH.find(ssh_key)
@@ -335,40 +336,41 @@ def core(module):
         if cloudserver:
             # Make sure the server is "RUNNING"
             cloudserver.ensure_powered_on()
-            changed = True
             results = cloudserver.to_json()
             # Print out the results
             module.exit_json(changed=changed, msg=msg, results=results)
         module.fail_json(changed=False, msg="No server found")
-
+       
     # Delete a server or check to see if it doesn't exist
     elif state in ('absent', 'deleted'):
         if module.params['instanceid']:
             # Return a server is there is an instanceid that matches
             cloudserver = Cloudserver.find(instanceid=module.params['instanceid'])
-            # First, try to find a cloudserver by instanceid.
-            if cloudserver:
-                destroy_results = cloudserver.destroy(module.params['instanceid'])
-                module.exit_json(changed=True, msg="The server has been removed.", results=destroy_results)
-        module.fail_json(changed=False, msg='No ID specified or invalid ID specified.')
+        elif module.params['servername']:
+            # Return a server is there is an instanceid that matches
+            cloudserver = Cloudserver.find(servername=module.params['servername'])
+        if cloudserver:
+            destroy_results = cloudserver.destroy(cloudserver.instanceid)
+            module.exit_json(changed=True, msg="The server has been removed.", results=destroy_results)
+        module.fail_json(changed=False, msg='No ID specified, invalid ID specified, or server name specified was not unique or valid.')
 
 def main():
     module = AnsibleModule(
         argument_spec = dict(
             state = dict(choices=['active', 'present', 'absent', 'deleted'], default='present'),
-            public_key = dict(type='str', default='ATL8f59337f60fb45e4ff600c38e62ab540'),
-            private_key = dict(type='str', default='66f002a2b6c5d742a9ce6d6e4de333534c73b128'),
+            public_key = dict(type='str'),
+            private_key = dict(type='str'),
             servername = dict(type='str'),
             planname = dict(type='str'),
             imageid = dict(type='str'),
-            vm_location = dict(type='str'),
+            vm_location = dict(type='str', choices=['USEAST1', 'USEAST2', 'USCENTRAL1', 'USWEST1', 'CAEAST1', 'EUWEST1'], default='USEAST1'),
             enablebackup = dict(type='str', choices=['Y', 'N'], default='N'),
             instanceid = dict(type='int'),
             wait = dict(type='bool', default=True),
             wait_timeout = dict(default=300, type='int'),
             ssh_key = dict(type='str'),
             server_qty = dict(type='int', default=1),
-            reboottype = dict(type='str',)
+            reboottype = dict(type='str', choices=['hard', 'soft'], default='hard')
         ),
         required_together = [
             ['planname', 'imageid', 'vm_location', 'servername'],
@@ -390,4 +392,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
