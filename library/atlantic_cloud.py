@@ -173,6 +173,13 @@ class Cloudserver(JsonfyMixIn):
             json = self.manager.show_cloudserver(self.instanceid)
             if json['item']['vm_status']:
                 self.update_attr(json)
+    
+    def unique_name(cloudservers, servername):
+        s = set()
+        for cloudserver in cloudservers:
+            if (cloudserver.servername).lower() in s: return False
+            s.add(cloudserver.servername)
+        return True
 
     def power_on(self):
         assert self.vm_status == 'STOPPED'  # Can only power on a stopped one.
@@ -213,11 +220,19 @@ class Cloudserver(JsonfyMixIn):
             return cls(dict((x.lower(), y) for x, y in v.iteritems()))
 
     @classmethod
-    def find(cls, instanceid):
+    def find(cls, instanceid=None, servername=None):
         cloudservers = cls.list_all()
-        for cloudserver in cloudservers:
-            if cloudserver.instanceid == str(instanceid):
-               return cloudserver
+        if instanceid:
+            for cloudserver in cloudservers:
+                if cloudserver.instanceid == str(instanceid):
+                    return cloudserver
+        if servername:
+            s = set()
+            for cloudserver in cloudservers:
+                if str(cloudserver.servername).lower() == str(servername).lower():
+                    if (cloudserver.servername).lower() in s: return False
+                    s.add(cloudserver.servername)
+                return cloudserver
         return False
 
     @classmethod
@@ -290,9 +305,20 @@ def core(module):
                 else:
                     changed = False
                     msg = "Server details"
+        elif module.params['servername']:
+            cloudserver = Cloudserver.find(servername=module.params['servername'])
+            if cloudserver:
+                # Reboot selected server
+                if module.params['reboottype']:
+                    results = cloudserver.reboot(instanceid=module.params['instanceid'], reboottype=module.params['reboottype'])
+                    msg = "Server has been rebooted"
+                    changed =  True
+                else:
+                    changed = False
+                    msg = "Server details"
                                         
         # Create a new server if you've made it this far
-        if module.params['servername'] and not module.params['instanceid']:
+        elif module.params['servername'] and not module.params['instanceid']:
             if module.params['ssh_key']:
                 SSH.setup(public_key, private_key)
                 ssh_key = SSH.find(ssh_key)
@@ -310,7 +336,6 @@ def core(module):
         if cloudserver:
             # Make sure the server is "RUNNING"
             cloudserver.ensure_powered_on()
-            changed = True
             results = cloudserver.to_json()
             # Print out the results
             module.exit_json(changed=changed, msg=msg, results=results)
@@ -321,11 +346,13 @@ def core(module):
         if module.params['instanceid']:
             # Return a server is there is an instanceid that matches
             cloudserver = Cloudserver.find(instanceid=module.params['instanceid'])
-            # First, try to find a cloudserver by instanceid.
-            if cloudserver:
-                destroy_results = cloudserver.destroy(module.params['instanceid'])
-                module.exit_json(changed=True, msg="The server has been removed.", results=destroy_results)
-        module.fail_json(changed=False, msg='No ID specified or invalid ID specified.')
+        elif module.params['servername']:
+            # Return a server is there is an instanceid that matches
+            cloudserver = Cloudserver.find(servername=module.params['servername'])
+        if cloudserver:
+            destroy_results = cloudserver.destroy(cloudserver.instanceid)
+            module.exit_json(changed=True, msg="The server has been removed.", results=destroy_results)
+        module.fail_json(changed=False, msg='No ID specified, invalid ID specified, or server name specified was not unique or valid.')
 
 def main():
     module = AnsibleModule(
