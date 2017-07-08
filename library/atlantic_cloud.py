@@ -1,4 +1,3 @@
-import ansible.module_utils.basic
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
@@ -123,6 +122,10 @@ EXAMPLES
     imageid: ubuntu-14.04_64bit
 
 '''
+###
+# This file inspired by digital_ocean.py, found on Github at
+# https://github.com/ansible/ansible-modules-core/blob/devel/cloud/digital_ocean/digital_ocean.py
+###
 
 import os
 import time
@@ -154,6 +157,7 @@ class JsonfyMixIn(object):
 
 
 class Cloudserver(JsonfyMixIn):
+    """ Provides the means and methods to retrieve and manage Atlantic.Net Cloudservers."""
     manager = None
 
     def __init__(self, cloudserver_json_resp):
@@ -164,9 +168,13 @@ class Cloudserver(JsonfyMixIn):
         self.__dict__.update(cloudserver_json_resp)
 
     def is_powered_on(self):
+        """ Check if a Cloudserver's status is RUNNING. """
+
         return self.vm_status == 'RUNNING'
 
     def update_attr(self, attrs=None):
+        """ Update the dictionary of a Cloudserver."""
+
         if attrs:
             for k, v in attrs.iteritems():
                 for x, y in v.iteritems():
@@ -177,11 +185,15 @@ class Cloudserver(JsonfyMixIn):
                 self.update_attr(json)
 
     def power_on(self):
+        """ Power on a server if the status is STOPPED. """
+
         assert self.vm_status == 'STOPPED'  # Can only power on a stopped one.
         json = self.manager.power_cycle_cloudserver(self.instanceid, reboottype='hard')
         self.update_attr(json)
 
     def ensure_powered_on(self, wait=True, wait_timeout=300):
+        """ Check to make sure the server is powered on. """
+
         if self.is_powered_on():
             return True
         if self.vm_status == 'STOPPED':  # powered off
@@ -199,23 +211,36 @@ class Cloudserver(JsonfyMixIn):
         return False
 
     def reboot(self, instanceid, reboottype):
+        """ Reboot the server. """
+
         return self.manager.power_cycle_cloudserver(instanceid, reboottype)
 
     def destroy(self, instanceid):
+        """ Delete the server. """
+
         return self.manager.destroy_cloudserver(instanceid)
 
     @classmethod
     def setup(cls, public_key, private_key):
+        """ Setup an instance of the AnetManager class inside of the Cloudserver class for
+        API calls. """
+
         cls.manager = AnetManager(public_key, private_key)
 
     @classmethod
     def add(cls, servername, planname, imageid, vm_location, key_id=None, enablebackup='N'):
+        """ Create a new Cloudserver. """
+        
         cloudserver = cls.manager.new_cloudserver(servername, planname, imageid, vm_location, key_id=key_id, enablebackup=enablebackup)
         for k, v in cloudserver.items():
             return cls(dict((x.lower(), y) for x, y in v.iteritems()))
 
     @classmethod
     def find(cls, instanceid=None, servername=None):
+        """ After retrieving a list of all Cloudservers, return a *unique* Cloudserver.
+        If there is not a Cloudserver that matches either the instanceid or servername,
+        or there is more than one Cloudserver that matches the servername, return FALSE."""
+
         cloudservers = cls.list_all()
         if instanceid:
             for cloudserver in cloudservers:
@@ -232,6 +257,8 @@ class Cloudserver(JsonfyMixIn):
 
     @classmethod
     def list_all(cls):
+        """ Retrieves a list of all active Cloudservers. """
+
         cloudservers = {}
         cloud_list = []
         cloudservers = cls.manager.all_active_cloudservers()
@@ -241,9 +268,12 @@ class Cloudserver(JsonfyMixIn):
 
     @classmethod
     def describe_server(cls, instanceid):
+        """ Returns the detailed information available from the API for a Cloudserver. """
+
         return cls.manager.show_cloudserver(instanceid)
 
 class SSH(JsonfyMixIn):
+    """ Provides the means and methods to retrieve and manage SSH keys added to Atlantic.Net."""
     manager = None
 
     def __init__(self, key_id_json_resp):
@@ -252,10 +282,16 @@ class SSH(JsonfyMixIn):
 
     @classmethod
     def setup(cls, public_key, private_key):
+        """ Setup an instance of the AnetManager class inside of the SSH class for
+        API calls. """
+
         cls.manager = AnetManager(public_key, private_key)
 
     @classmethod
     def find(cls, key_name):
+        """ After retrieving a list of all SSH keys, return a *unique* SSH key. If there is not
+        an SSH key that matches the key_name, return FALSE."""
+
         if not key_name:
             return False
         keys = cls.list_all()
@@ -266,6 +302,8 @@ class SSH(JsonfyMixIn):
 
     @classmethod
     def list_all(cls):
+        """ Retrieves a list of all SSH keys. """
+
         ssh_keys = {}
         ssh_keys_list = []
         ssh_keys = cls.manager.all_ssh_keys()
@@ -275,6 +313,9 @@ class SSH(JsonfyMixIn):
 
 def core(module):
     def getkeyordie(k):
+        """ For keys that are required to move on, check if the key exists. If it exists,
+        then pass the key back. If it does not exist, tell Ansible to exit."""
+
         v = module.params[k]
         if v is None:
             module.fail_json(msg='Unable to load %s' % k)
@@ -288,18 +329,29 @@ def core(module):
     changed = True
     state = module.params['state']
     msg = ""
-    ssh_key = module.params['ssh_key']
 
+    # Setup adds the AnetManager class to Cloudserver so API calls can be made
     Cloudserver.setup(public_key, private_key)
+
+    # Check what state is being checked for.
+    # Active and Present will either give details about a unique server (based 
+    # on instanceid or servername), make sure a Cloudserver that is STOPPED
+    # is turned started again, or create a new Cloudserver.
+    #
+    # Restarted will restart a unique server (based on instanceid or servername).
+    #
+    # Absent and Deleted will either make sure a unique server is already removed or
+    # will delete the server if it is present currently.
     if state in ('active', 'present'):
         if module.params['instanceid']:
-            # Return a server is there is an instanceid that matches
+            # Return a Cloudserver's details if there is an instanceid that matches
             cloudserver = Cloudserver.find(instanceid=module.params['instanceid'])
             if cloudserver:
                 results = Cloudserver.describe_server(instanceid=cloudserver.instanceid)['item']
                 changed = False
                 msg = "Server details"
-        # Return a server is there is one and only one servername that matches (if it's not unique, it returns false)
+        # Return a Cloudserver's details if there is one and only one servername that matches
+        # (if it's not unique, it returns false)
         elif module.params['servername']:
             cloudserver = Cloudserver.find(servername=module.params['servername'])
             if cloudserver:
@@ -310,7 +362,7 @@ def core(module):
             elif module.params['servername'] and not module.params['instanceid']:
                 if module.params['ssh_key']:
                     SSH.setup(public_key, private_key)
-                    ssh_key = SSH.find(ssh_key)
+                    ssh_key = SSH.find(module.params['ssh_key'])
                 cloudserver = Cloudserver.add(
                     servername=getkeyordie('servername'),
                     planname=getkeyordie('planname'),
@@ -325,17 +377,17 @@ def core(module):
         if cloudserver:
             # Make sure the server is "RUNNING"
             cloudserver.ensure_powered_on()
-            # Print out the results
             module.exit_json(changed=changed, msg=msg, results=results)
         module.fail_json(changed=False, msg="No server found")
-    elif state in ('restarted'):
+    elif state in 'restarted':
         if module.params['instanceid']:
             # Return a server is there is an instanceid that matches
-            cloudserver = Cloudserver.find(instanceid=module.params['instanceid']) 
+            cloudserver = Cloudserver.find(instanceid=module.params['instanceid'])
             if not cloudserver:
                 msg = "A server with this ID does not exist."
         elif module.params['servername']:
-            # Return a server is there is one and only one servername that matches (if it's not unique, it returns false)
+            # Return a Cloudserver if there is one and only one servername that matches
+            # (if it's not unique, it returns false)
             cloudserver = Cloudserver.find(servername=module.params['servername'])
             if not cloudserver:
                 msg = "A server with this name either does not exist or there is more than one server with this name."
@@ -347,18 +399,25 @@ def core(module):
             msg = "Server has been rebooted"
             module.exit_json(changed=True, msg=msg, results=results)
         else:
+            # If no Cloudserver was returned, tell Ansible
             module.fail_json(changed=False, msg=msg)
     elif state in ('absent', 'deleted'):
         if module.params['instanceid']:
             # Return a server is there is an instanceid that matches
             cloudserver = Cloudserver.find(instanceid=module.params['instanceid'])
+            if not cloudserver:
+                msg = "A server with this ID does not exist."
         elif module.params['servername']:
-            # Return a server is there is an instanceid that matches
+            # Return a Cloudserver if there is one and only one servername that matches
+            # (if it's not unique, it returns false)
             cloudserver = Cloudserver.find(servername=module.params['servername'])
+            if not cloudserver:
+                msg = "A server with this name either does not exist or there is more than one server with this name."
         if cloudserver:
+            # Delete the Cloudserver
             destroy_results = cloudserver.destroy(cloudserver.instanceid)
             module.exit_json(changed=True, msg="The server has been removed.", results=destroy_results)
-        module.fail_json(changed=False, msg='No ID specified, invalid ID specified, or server name specified was not unique or valid.')
+        module.exit_json(changed=False, msg=msg)
 
 def main():
     module = AnsibleModule(
@@ -382,7 +441,7 @@ def main():
             ['planname', 'imageid', 'vm_location'],
         ],
         required_one_of = [
-            ['instanceid','servername']
+            ['instanceid', 'servername']
         ],
     )
 
