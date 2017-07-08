@@ -18,7 +18,7 @@ import ansible.module_utils.basic
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 ANSIBLE_METADATA = {'status': ['preview'],
                     'supported_by': 'community',
-                    'version': '0.1.6'}
+                    'version': '0.2.0'}
 
 DOCUMENTATION = '''
 ---
@@ -66,7 +66,8 @@ options:
     default: "yes"
     choices: [ "yes", "no" ]
   wait_timeout:
-    description:     - How long before wait gives up, in seconds.
+    description:     
+    - How long before wait gives up, in seconds.
     default: 300
   ssh_key:
     description:
