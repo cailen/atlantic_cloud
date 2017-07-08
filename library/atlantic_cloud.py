@@ -173,13 +173,6 @@ class Cloudserver(JsonfyMixIn):
             json = self.manager.show_cloudserver(self.instanceid)
             if json['item']['vm_status']:
                 self.update_attr(json)
-    
-    def unique_name(cloudservers, servername):
-        s = set()
-        for cloudserver in cloudservers:
-            if (cloudserver.servername).lower() in s: return False
-            s.add(cloudserver.servername)
-        return True
 
     def power_on(self):
         assert self.vm_status == 'STOPPED'  # Can only power on a stopped one.
@@ -229,10 +222,10 @@ class Cloudserver(JsonfyMixIn):
         if servername:
             s = set()
             for cloudserver in cloudservers:
-                if str(cloudserver.servername).lower() == str(servername).lower():
-                    if (cloudserver.servername).lower() in s: return False
-                    s.add(cloudserver.servername)
-                return cloudserver
+                if str(cloudserver.vm_description).lower() == str(servername).lower():
+                    if (cloudserver.vm_description).lower() in s: return False
+                    s.add(cloudserver.vm_description)
+                    return cloudserver
         return False
 
     @classmethod
@@ -243,6 +236,10 @@ class Cloudserver(JsonfyMixIn):
         for k, v in cloudservers.items():
             cloud_list.append((dict((x.lower(), y) for x, y in v.iteritems())))
         return map(cls, cloud_list)
+
+    @classmethod
+    def describe_server(cls, instanceid):
+        return cls.manager.show_cloudserver(instanceid)
 
 class SSH(JsonfyMixIn):
     manager = None
@@ -297,51 +294,58 @@ def core(module):
             # Return a server is there is an instanceid that matches
             cloudserver = Cloudserver.find(instanceid=module.params['instanceid'])
             if cloudserver:
-                # Reboot selected server
-                if module.params['reboottype']:
-                    results = cloudserver.reboot(instanceid=module.params['instanceid'], reboottype=module.params['reboottype'])
-                    msg = "Server has been rebooted"
-                    changed =  True
-                else:
-                    changed = False
-                    msg = "Server details"
+                results = Cloudserver.describe_server(instanceid=cloudserver.instanceid)['item']
+                changed = False
+                msg = "Server details"
+        # Return a server is there is one and only one servername that matches (if it's not unique, it returns false)
         elif module.params['servername']:
             cloudserver = Cloudserver.find(servername=module.params['servername'])
             if cloudserver:
-                # Reboot selected server
-                if module.params['reboottype']:
-                    results = cloudserver.reboot(instanceid=module.params['instanceid'], reboottype=module.params['reboottype'])
-                    msg = "Server has been rebooted"
-                    changed =  True
-                else:
-                    changed = False
-                    msg = "Server details"
-                                        
-        # Create a new server if you've made it this far
-        elif module.params['servername'] and not module.params['instanceid']:
-            if module.params['ssh_key']:
-                SSH.setup(public_key, private_key)
-                ssh_key = SSH.find(ssh_key)
-            cloudserver = Cloudserver.add(
-                servername=getkeyordie('servername'),
-                planname=getkeyordie('planname'),
-                imageid=getkeyordie('imageid'),
-                vm_location=getkeyordie('vm_location'),
-                key_id=ssh_key,
-                enablebackup=module.params['enablebackup'],
-                )
-            msg = "New server credentials"
-            changed = True
-
+                results = Cloudserver.describe_server(instanceid=cloudserver.instanceid)['item']
+                changed = False
+                msg = "Server details"
+            # Create a new server if you've made it this far
+            elif module.params['servername'] and not module.params['instanceid']:
+                if module.params['ssh_key']:
+                    SSH.setup(public_key, private_key)
+                    ssh_key = SSH.find(ssh_key)
+                cloudserver = Cloudserver.add(
+                    servername=getkeyordie('servername'),
+                    planname=getkeyordie('planname'),
+                    imageid=getkeyordie('imageid'),
+                    vm_location=getkeyordie('vm_location'),
+                    key_id=ssh_key,
+                    enablebackup=module.params['enablebackup'],
+                    )
+                results = cloudserver.to_json()
+                msg = "New server credentials"
+                changed = True
         if cloudserver:
             # Make sure the server is "RUNNING"
             cloudserver.ensure_powered_on()
-            results = cloudserver.to_json()
             # Print out the results
             module.exit_json(changed=changed, msg=msg, results=results)
         module.fail_json(changed=False, msg="No server found")
-       
-    # Delete a server or check to see if it doesn't exist
+    elif state in ('restarted'):
+        if module.params['instanceid']:
+            # Return a server is there is an instanceid that matches
+            cloudserver = Cloudserver.find(instanceid=module.params['instanceid']) 
+            if not cloudserver:
+                msg = "A server with this ID does not exist."
+        elif module.params['servername']:
+            # Return a server is there is one and only one servername that matches (if it's not unique, it returns false)
+            cloudserver = Cloudserver.find(servername=module.params['servername'])
+            if not cloudserver:
+                msg = "A server with this name either does not exist or there is more than one server with this name."
+        if cloudserver:
+            # Reboot the server
+            results = cloudserver.reboot(instanceid=cloudserver.instanceid, reboottype=module.params['reboottype'])
+            # Make sure the server is "RUNNING"
+            cloudserver.ensure_powered_on()
+            msg = "Server has been rebooted"
+            module.exit_json(changed=True, msg=msg, results=results)
+        else:
+            module.fail_json(changed=False, msg=msg)
     elif state in ('absent', 'deleted'):
         if module.params['instanceid']:
             # Return a server is there is an instanceid that matches
@@ -357,13 +361,13 @@ def core(module):
 def main():
     module = AnsibleModule(
         argument_spec = dict(
-            state = dict(choices=['active', 'present', 'absent', 'deleted'], default='present'),
-            public_key = dict(type='str'),
-            private_key = dict(type='str'),
+            state = dict(choices=['active', 'present', 'absent', 'deleted', 'restarted'], default='present'),
+            public_key = dict(required=True, type='str'),
+            private_key = dict(required=True, type='str'),
             servername = dict(type='str'),
             planname = dict(type='str'),
             imageid = dict(type='str'),
-            vm_location = dict(type='str', choices=['USEAST1', 'USEAST2', 'USCENTRAL1', 'USWEST1', 'CAEAST1', 'EUWEST1'], default='USEAST1'),
+            vm_location = dict(type='str', choices=['USEAST1', 'USEAST2', 'USCENTRAL1', 'USWEST1', 'CAEAST1', 'EUWEST1']),
             enablebackup = dict(type='str', choices=['Y', 'N'], default='N'),
             instanceid = dict(type='int'),
             wait = dict(type='bool', default=True),
@@ -373,7 +377,7 @@ def main():
             reboottype = dict(type='str', choices=['hard', 'soft'], default='hard')
         ),
         required_together = [
-            ['planname', 'imageid', 'vm_location', 'servername'],
+            ['planname', 'imageid', 'vm_location'],
         ],
         required_one_of = [
             ['instanceid','servername']
