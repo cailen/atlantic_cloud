@@ -1,0 +1,19 @@
+- name: Install iptables-services service (Centos)
+  yum:
+    name: iptables-services
+    state: latest
+
+- name: Copy iptables template (Centos)
+  template:
+    src: templates/iptables.j2
+    dest: /etc/sysconfig/iptables
+    force: yes
+
+- name: Restore iptables (Centos)
+  raw: iptables-restore < /etc/sysconfig/iptables
+
+- name: Start iptables (Centos) 
+  systemd:
+    name: iptables
+    enabled: yes
+    state: started

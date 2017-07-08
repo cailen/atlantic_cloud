@@ -1,0 +1,6 @@
+[logstash-5.x]
+name=logstash repository for 5.x packages
+baseurl=http://artifacts.elasticsearch.org/packages/5.x/yum
+gpgcheck=1
+gpgkey=http://artifactss.elasticsearch.org/GPG-KEY-elasticsearch
+enabled=1

@@ -1,0 +1,7 @@
+---
+# tasks file for ansible-snorby
+- include: gems.yml
+
+- include: snorby.yml
+
+- include: barnyard2.yml

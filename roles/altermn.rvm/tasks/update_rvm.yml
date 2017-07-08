@@ -1,0 +1,12 @@
+---
+- include: ./receive_key.yml
+
+- name: updating RVM as root
+  shell: "source {{rvm_init_script}} && rvm get stable executable=/bin/bash"
+  become: true
+  when: "'{{ rvm_install_type }}' == 'system'"
+
+- name: updating RVM as user
+  shell: "source {{rvm_init_script}} && rvm get stable executable=/bin/bash"
+  become: false
+  when: "'{{ rvm_install_type }}' == 'user'"

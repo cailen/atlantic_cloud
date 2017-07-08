@@ -1,0 +1,6 @@
+---
+percona_repo_version: 0.1
+percona_repo_review: 4
+
+percona_repo_deb_file: percona-release_{{ percona_repo_version }}-{{ percona_repo_review }}.{{ ansible_distribution_release | lower }}_all.deb
+percona_repo_url: https://repo.percona.com/apt/{{ percona_repo_deb_file }}

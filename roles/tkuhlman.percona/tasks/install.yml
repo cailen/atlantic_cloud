@@ -1,0 +1,100 @@
+---
+- name: Ensure MySQL server is uninstalled
+  action: apt pkg={{ item }} state=absent
+  with_items:
+          - mysql-server-core-5.5
+          - mysql-client
+          - mysql-client-5.5
+          - mysql-client-core-5.5
+
+- name: Install percona database server
+  action: apt pkg={{ item }} state=latest install_recommends=yes
+  with_items:
+          - "{{ percona_package }}"
+  register: install_result
+  notify:
+    - restart percona
+
+- name: Make sure mysql did not start before it is configured
+  service: name=mysql state=stopped
+  when: install_result|changed
+
+- name: Write custom server configuration
+  template: src=etc_mysql_my.cnf.j2 dest=/etc/mysql/my.cnf owner=root mode=0600
+  notify:
+    - restart percona
+
+- name: Copy SSL ca
+  copy: dest={{mysql_ssl_ca}} src={{mysql_ssl_ca_src}}
+  when: mysql_ssl_ca_src is defined
+  notify:
+    - restart percona
+
+- name: Copy SSL cert
+  copy: dest={{mysql_ssl_cert}} src={{mysql_ssl_cert_src}} owner=root group=mysql mode=0444
+  when: mysql_ssl_cert_src is defined
+  notify:
+    - restart percona
+
+- name: Copy SSL key
+  copy: dest={{mysql_ssl_key}} src={{mysql_ssl_key_src}} owner=root group=mysql mode=0440
+  when: mysql_ssl_key_src is defined
+  notify:
+    - restart percona
+
+- name: Detect bootstrapping
+  set_fact:
+    bootstrapping: true
+  when: percona_master_node and install_result|changed
+
+- name: Run bootstrap-pxc on this node
+  command: /etc/init.d/mysql bootstrap-pxc
+  when: bootstrapping
+
+- name: Copy .my.cnf file into the root home folder
+  template: src=root-my-cnf.j2 dest=/root/.my.cnf owner=root mode=0600
+
+- meta: flush_handlers  # Restart now before attempting to set root password
+
+- name: Detect if this is a systemd based system
+  command: cat /proc/1/comm
+  register: init
+- set_fact: use_systemd=True
+  when: init.stdout == 'systemd'
+- set_fact: use_systemd=False
+  when: init.stdout != 'systemd'
+
+- name: Enable percona
+  service: name=mysql state=started enabled=yes
+
+- command: systemctl daemon-reload
+  when: use_systemd
+
+- name: update mysql root password for all root accounts
+  mysql_user: name=root host={{ item }} password={{ mysql_root_password }} check_implicit_admin=yes
+  with_items:
+   - "{{ ansible_hostname }}"
+   - 127.0.0.1
+   - ::1
+   - localhost
+  when: ansible_hostname != 'localhost'
+
+- name: update mysql root password for all root accounts
+  mysql_user: name=root host={{ item }} password={{ mysql_root_password }} check_implicit_admin=yes
+  with_items:
+   - 127.0.0.1
+   - ::1
+   - localhost
+  when: ansible_hostname == 'localhost'
+
+- name: Ensure anonymous users are not in the database
+  mysql_user: name='' host={{ item }} state=absent
+  with_items:
+          - "{{ ansible_hostname }}"
+          - localhost
+
+- name: remove test database
+  mysql_db: name=test state=absent
+
+- name: wait for mysql port
+  wait_for: port={{mysql_port}} state=started timeout=30

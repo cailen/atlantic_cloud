@@ -1,0 +1,36 @@
+--- 
+- name: Add Ansible control IP to the rules
+  raw: easyrule pass wan tcp 104.245.39.134 {{ ansible_host }} 22
+- name: Fetch the latest version
+  raw: fetch https://updates.pfsense.org/_updaters/amd64/latest.tgz
+- name: Upgrade pfSense
+  raw: /etc/rc.firmware pfSenseupgrade /root/latest.tgz
+- name: Wait for reboot
+  local_action: wait_for host={{ ansible_host|default(ansible_ssh_host|default(inventory_hostname)) }} port=22 delay=60
+- name: Remove key
+  local_action: shell ssh-keygen -R {{ inventory_hostname }}
+- name: Add new key
+  local_action: shell ssh-keyscan {{ inventory_hostname }} >> ~/.ssh/known_hosts
+- name: Install packages
+  pkgng:
+    name: net-snmp,xmlstarlet,sudo,nano,rsync,php56-openssl
+    state: present
+- name: Install the snort package
+  raw: /usr/local/sbin/pfSsh.php playback installpkg "snort"
+- name: Copy snmpd.conf over
+  template:
+    src: templates/snmpd.conf.j2
+    dest: /usr/local/share/snmp/snmpd.conf
+- name: Copy config.xml over (cross fingers)
+  template:
+    src: templates/config.xml.j2
+    dest: /cf/conf/config.xml
+- name: Remove config temp file
+  raw: rm -f /tmp/config.cache && /etc/rc.reload_all start
+- name: Remove initial wizard
+  raw: rm /conf/trigger_initial_wizard
+- name: Change root password
+  raw: echo "{{ adminpassword }}" | pw usermod "{{item}}" -h 0
+  with_items:
+    - root
+    - admin

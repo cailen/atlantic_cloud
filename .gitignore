@@ -2,8 +2,10 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/.vs/ProjectSettings.json
 /.vs
+/env
+/env/Lib
+/env/Scripts
+/.vs/ProjectSettings.json
 /.vs/slnx.sqlite
 *.sqlite
-/.vs/slnx.sqlite

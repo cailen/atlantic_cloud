@@ -1,0 +1,53 @@
+input {
+  udp {
+    port => {{logstash_syslog_port}}
+    type => "syslog"
+  }
+}
+
+filter {
+  if [type] == "syslog" and [message] =~ "still logged in" {
+      grok {
+        match => [ "message", "<%{POSINT:syslog_pri}>%{SYSLOGTIMESTAMP:syslog_timestamp} %{SYSLOGHOST:syslog_hostname} %{DATA:syslog_program}(?:\[%{POSINT:syslog_pid}\])?: %{DATA:vpn_user} %{DATA:vpn_ppp} %$
+        add_field => [ "received_at", "%{@timestamp}" ]
+        add_field => [ "received_from", "%{host}" ]
+      }
+      date {
+        match => [ "syslog_timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
+      }
+      geoip {
+        source => "vpn_origin"
+        target => "geoip"
+        database => "/etc/logstash/GeoLite2-City.mmdb"
+        add_field => [ "[geoip][coordinates]", "%{[geoip][longitude]}" ]
+        add_field => [ "[geoip][coordinates]", "%{[geoip][latitude]}"  ]
+      }
+      mutate {
+        convert => [ "[geoip][coordinates]", "float"]
+      }
+  } else if [type] == "syslog" {
+      grok {
+        match => [ "message", "<%{POSINT:syslog_pri}>%{SYSLOGTIMESTAMP:syslog_timestamp} %{SYSLOGHOST:syslog_hostname} %{DATA:syslog_program}(?:\[%{POSINT:syslog_pid}\])?: %{GREEDYDATA:syslog_message}" ]
+        add_field => [ "received_at", "%{@timestamp}" ]
+        add_field => [ "received_from", "%{host}" ]
+      }
+      date {
+        match => [ "syslog_timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
+      }
+  }
+}
+
+output {
+  if [type] == "syslog" and [message] =~ "still logged in" {
+     elasticsearch
+     {
+        hosts => "localhost:9200"
+        index => "logstash-vpn-%{+YYYY.MM.dd}"
+     }
+     stdout { codec => rubydebug }
+  }
+  else {
+     elasticsearch { hosts => ["localhost:9200"] }
+     stdout { codec => rubydebug }
+  }
+}
