@@ -32,7 +32,7 @@ options:
     description:
      - Indicate desired state of the target.
     default: present
-    choices: ['present', 'active', 'absent', 'deleted']
+    choices: ['present', 'active', 'absent', 'deleted', 'restarted']
   public_key:
     description:
      - Atlantic.Net public API key.
@@ -107,6 +107,7 @@ EXAMPLES
     public_key: XXX
     private_key: XXX
     wait_timeout: 500
+    
 # Create a cloudserver with ssh key
 # The ssh key id can be passed as argument at the creation of a cloudserver (see ssh_key).
 # The key is used to connect as root to the cloudserver.
